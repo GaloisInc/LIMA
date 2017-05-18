@@ -1,0 +1,4 @@
+packages: .
+          ../../slim/
+          ../../slim-c/
+          ../../slim-sally/
