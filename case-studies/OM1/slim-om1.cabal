@@ -11,7 +11,7 @@ extra-source-files:  om1.h
                    , om1.c
                    , om1.mcmt
 
-executable atom-om1
+executable slim-om1
   default-language:    Haskell2010
   main-is:             Main.hs
   other-modules:       AtomOM1
