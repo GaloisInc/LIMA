@@ -12,7 +12,9 @@ main = do
   compileWBSToC
 
   putStrLn "Compiling WBS to Sally... (wbs.mcmt)"
-  let sallyCfg = defaultCfg { cfgMFA = hybridMFA }
+  -- TODO: specifying 'hybridMFA' below leads to an explosion in model
+  -- generation
+  let sallyCfg = defaultCfg { cfgMFA = NoFaults }
   compileToSally "wbs" sallyCfg "wbs.mcmt" wbs Nothing
 
   putStrLn "Done."
