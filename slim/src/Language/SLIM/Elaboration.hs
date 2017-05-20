@@ -45,18 +45,20 @@ import Language.SLIM.Expressions hiding (typeOf)
 import Language.SLIM.UeMap
 
 
+-- | Global data kept in each 'Atom' monad computation.
 data Global = Global
-  { gRuleId    :: Int
-  , gVarId     :: Int
-  , gArrayId   :: Int
-  , gChannelId :: Int
-  , gState     :: [StateHierarchy]
-  , gProbes    :: [(String, Hash)]
-  , gPeriod    :: Int
-  , gPhase     :: Phase
+  { gRuleId    :: Int  -- ^ integer supply for rule IDs
+  , gVarId     :: Int  -- ^ integer supply for variable IDs
+  , gArrayId   :: Int  -- ^ integer supply for array IDs
+  , gChannelId :: Int  -- ^ integer supply for channel IDs
+  , gState     :: [StateHierarchy]  -- ^ global state hierarchies
+  , gProbes    :: [(String, Hash)]  -- ^ probe names and expression hashes
+  , gPeriod    :: Int               -- ^ Atom period
+  , gPhase     :: Phase             -- ^ Atom phase
   }
   deriving (Show)
 
+-- | Initial global state for the 'Atom' monad.
 initialGlobal :: Global
 initialGlobal = Global
   { gRuleId    = 0
@@ -92,6 +94,7 @@ data AtomDB = AtomDB
   , atomChanRead    :: [ChanOutput]
   }
 
+-- | Show AtomDB instance for debugging purposes.
 instance Show AtomDB where
   show a = "AtomDB { " ++ intercalate ", " [ show (atomId a)
                                            , atomName a
@@ -101,6 +104,13 @@ instance Show AtomDB where
 instance Eq   AtomDB where (==) = (==) `on` atomId
 instance Ord  AtomDB where compare a b = compare (atomId a) (atomId b)
 
+-- | A 'Rule' corresponds to an atomic action of one of three forms:
+--
+--   1. an atomic computation, e.g. variable assignment, channel reads and
+--   writes.
+--   2. an assertion statement
+--   3. a coverage statement
+--
 -- XXX sum of records leads to partial record field functions
 data Rule
   = Rule
@@ -127,6 +137,7 @@ data Rule
     , ruleCover     :: Hash
     }
 
+-- | Show Rule instance, mainly for debugging.
 instance Show Rule where
   show r@Rule{} = "Rule { " ++ intercalate ", " [ show (ruleId r)
                                                 , ruleName r
@@ -148,14 +159,22 @@ data ChanInfo = ChanInfo
   }                               --   or may not be set
   deriving (Eq, Show)
 
+-- | A StateHierarchy is a namespaced global state structure which is the
+-- result of elaborating an 'Atom' monad computation.
 data StateHierarchy
-  = StateHierarchy Name [StateHierarchy]
-  | StateVariable  Name Const
-  | StateArray     Name [Const]
-  | StateChannel   Name Type
+  = StateHierarchy Name [StateHierarchy]  -- ^ A namespaced hierarchy
+  | StateVariable  Name Const             -- ^ A state variable with name and
+                                          --   initial value
+  | StateArray     Name [Const]           -- ^ A state array with name and list
+                                          --   of initial values
+  | StateChannel   Name Type              -- ^ A channel with name and channel
+                                          --   value type
   deriving (Show)
 
 
+-- | Given a hash for the parent Atom's enable expression and an 'AtomDB',
+-- produce a list of 'Rule's in context of a `UeState` expression sharing
+-- cache.
 elaborateRules :: Hash -> AtomDB -> UeState [Rule]
 elaborateRules parentEnable atom =
       if isRule then do r  <- rule
@@ -180,8 +199,7 @@ elaborateRules parentEnable atom =
 
     -- *don't* combine the parent enableNH and the child enableNH conditions
     enableNH :: UeState Hash
-    enableNH = do
-      return (atomEnableNH atom)
+    enableNH = return (atomEnableNH atom)
 
     -- creat a 'Rule' from the 'AtomDB' and enable condition(s)
     rule :: UeState Rule
@@ -257,6 +275,7 @@ elaborateRules parentEnable atom =
       S.put st''
       return (uv', h')
 
+-- | Renormalize 'Rule' IDs starting at the given 'Int'.
 reIdRules :: Int -> [Rule] -> [Rule]
 reIdRules _ [] = []
 reIdRules i (a:b) = case a of
@@ -372,7 +391,6 @@ get = Atom (\ s -> return (s, s))
 put :: AtomSt -> Atom ()
 put s = Atom (\ _ -> return ((), s))
 
-
 -- | Given a top level name and design, elaborates design and returns a design
 -- database.
 --
@@ -414,6 +432,7 @@ elaborate st name atom = do
                            )
                  else Nothing
 
+-- | Remove namespaces in a 'StateHierarchy' that have no state in them.
 trimState :: StateHierarchy -> StateHierarchy
 trimState a =
     case a of
