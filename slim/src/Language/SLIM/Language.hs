@@ -64,15 +64,12 @@ module Language.SLIM.Language
   , assertImply
   -- * Utilities
   , Name
-  , liftIO
   , path
   , clock
   -- * Code Coverage
   , nextCoverage
   ) where
 
-import Control.Monad
-import Control.Monad.Trans
 import Data.Int
 import Data.Word
 import Data.List (foldl')
@@ -95,8 +92,7 @@ atom :: Name -> Atom a -> Atom a
 atom name design = do
   name' <- addName name
   (st1, (g1, parent)) <- get
-  (a, (st2, (g2, child))) <- liftIO $
-                             buildAtom st1 g1 { gState = [] } name' design
+  let (a, (st2, (g2, child))) = buildAtom st1 g1 { gState = [] } name' design
   put (st2, ( g2 { gState = gState g1 ++ [StateHierarchy name $ gState g2] }
             , parent { atomSubs = atomSubs parent ++ [child] }))
   return a
@@ -356,9 +352,10 @@ nextCoverage = do
 assert :: Name -> E Bool -> Atom ()
 assert name check = do
   (st, (g, atom')) <- get
-  let names = map fst (atomAsserts atom')
-  when (name `elem` names)
-       (liftIO $ putStrLn $ "WARNING: Assertion name already used: " ++ name)
+  -- TODO
+  -- let names = map fst (atomAsserts atom')
+  -- when (name `elem` names)
+  --      (liftIO $ putStrLn $ "WARNING: Assertion name already used: " ++ name)
   let (chk,st') = newUE (ue check) st
   put (st', (g, atom' { atomAsserts = (name, chk) : atomAsserts atom' }))
 
@@ -375,9 +372,10 @@ assertImply name a b = do
 cover :: Name -> E Bool -> Atom ()
 cover name check = do
   (st, (g, atom')) <- get
-  let names = map fst (atomCovers atom')
-  when (name `elem` names)
-       (liftIO . putStrLn $ "WARNING: Coverage name already used: " ++ name)
+  -- TODO
+  -- let names = map fst (atomCovers atom')
+  -- when (name `elem` names)
+  --      (liftIO . putStrLn $ "WARNING: Coverage name already used: " ++ name)
   let (chk,st') = newUE (ue check) st
   put (st', (g, atom' { atomCovers = (name, chk) : atomCovers atom' }))
 

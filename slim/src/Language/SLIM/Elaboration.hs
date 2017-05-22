@@ -30,7 +30,6 @@ module Language.SLIM.Elaboration
 
 import Control.Monad (ap)
 import qualified Control.Monad.State.Strict as S
-import Control.Monad.Trans
 
 import Data.Function (on)
 import Data.Char (isAlpha, isAlphaNum)
@@ -352,10 +351,10 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
 
 -- | Evaluate the computation carried by the given atom and return an 'AtomDB'
 --   value, the intermediate representation for atoms at this level.
-buildAtom :: UeMap -> Global -> Name -> Atom a -> IO (a, AtomSt)
-buildAtom st g name (Atom f) = do
+buildAtom :: UeMap -> Global -> Name -> Atom a -> (a, AtomSt)
+buildAtom st g name (Atom f) =
   let (h,st') = newUE (ubool True) st
-  f (st', ( g { gRuleId = gRuleId g + 1 }
+  in f (st', ( g { gRuleId = gRuleId g + 1 }
           , AtomDB
               { atomId        = gRuleId g
               , atomName      = name
@@ -378,7 +377,9 @@ buildAtom st g name (Atom f) = do
 type AtomSt = (UeMap, (Global, AtomDB))
 
 -- | The Atom monad holds variable and rule declarations.
-data Atom a = Atom (AtomSt -> IO (a, AtomSt))
+
+data Atom a = Atom (AtomSt -> (a, AtomSt))
+-- newtype Atom a = Atom { unAtom :: StateT AtomSt Id a }
 
 instance Applicative Atom where
   pure = return
@@ -388,26 +389,19 @@ instance Functor Atom where
   fmap = S.liftM
 
 instance Monad Atom where
-  return a = Atom (\ s -> return (a, s))
+  return a = Atom (\s -> (a, s))
   (Atom f1) >>= f2 = Atom f3
     where
-    f3 s = do
-      (a, s') <- f1 s
-      let Atom f4 = f2 a
-      f4 s'
-
-instance MonadIO Atom where
-  liftIO io = Atom f
-    where
-    f s = do
-      a <- io
-      return (a, s)
+    f3 s =
+      let (a, s') = f1 s
+          Atom f4 = f2 a
+      in f4 s'
 
 get :: Atom AtomSt
-get = Atom (\ s -> return (s, s))
+get = Atom (\ s -> (s, s))
 
 put :: AtomSt -> Atom ()
-put s = Atom (\ _ -> return ((), s))
+put s = Atom (\ _ -> ((), s))
 
 -- | Given a top level name and design, elaborates design and returns a design
 -- database.
@@ -422,8 +416,8 @@ elaborate :: UeMap -> Name -> Atom ()
                          , [(Name, Type)])
                        ))
 elaborate st name atom = do
-  (_, (st0, (g, atomDB))) <- buildAtom st initialGlobal name atom
-  let (h, st1)        = newUE (ubool True) st0
+  let (_, (st0, (g, atomDB))) = buildAtom st initialGlobal name atom
+      (h, st1)        = newUE (ubool True) st0
       (getRules, st2) = S.runState (elaborateRules h atomDB) st1
       rules           = reIdRules 0 (reverse getRules)
       -- channel source and dest are numbered based on 'ruleId's in 'rules'
