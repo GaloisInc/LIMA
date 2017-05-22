@@ -350,17 +350,18 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
                      }
              else error "Elaboration: getChannels: mismatch occured"
 
+-- | Evaluate the computation carried by the given atom and return an 'AtomDB'
+--   value, the intermediate representation for atoms at this level.
 buildAtom :: UeMap -> Global -> Name -> Atom a -> IO (a, AtomSt)
 buildAtom st g name (Atom f) = do
   let (h,st') = newUE (ubool True) st
-  let (h',st'') = newUE (ubool True) st'
-  f (st'', ( g { gRuleId = gRuleId g + 1 }
+  f (st', ( g { gRuleId = gRuleId g + 1 }
           , AtomDB
               { atomId        = gRuleId g
               , atomName      = name
               , atomNames     = []
               , atomEnable    = h
-              , atomEnableNH  = h'
+              , atomEnableNH  = h
               , atomSubs      = []
               , atomPeriod    = gPeriod g
               , atomPhase     = gPhase  g
