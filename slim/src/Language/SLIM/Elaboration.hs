@@ -452,11 +452,10 @@ elaborate st name atom = do
 
 -- | Remove namespaces in a 'StateHierarchy' that have no state in them.
 trimState :: StateHierarchy -> StateHierarchy
-trimState a =
-    case a of
-      StateHierarchy name items ->
-        StateHierarchy name (filter f . map trimState $ items)
-      a' -> a'
+trimState a = case a of
+    StateHierarchy name items ->
+      StateHierarchy name (filter f . map trimState $ items)
+    a' -> a'
   where
     f (StateHierarchy _ []) = False
     f _ = True
