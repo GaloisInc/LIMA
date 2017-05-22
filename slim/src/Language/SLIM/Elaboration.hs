@@ -53,8 +53,9 @@ data Global = Global
   , gChannelId :: Int  -- ^ integer supply for channel IDs
   , gState     :: [StateHierarchy]  -- ^ global state hierarchies
   , gProbes    :: [(String, Hash)]  -- ^ probe names and expression hashes
-  , gPeriod    :: Int               -- ^ Atom period
-  , gPhase     :: Phase             -- ^ Atom phase
+  , gPeriod    :: Int               -- ^ Atom global period, used by sub-atoms
+                                    --   that don't specify a period
+  , gPhase     :: Phase             -- ^ Atom global phase
   }
   deriving (Show)
 
@@ -71,8 +72,12 @@ initialGlobal = Global
   , gPhase     = MinPhase 0
   }
 
+-- | The atom database value. This is an intermediate representation of an atom
+-- computation.
 data AtomDB = AtomDB
-  { atomId          :: Int
+  { -- | Internal Atom identifier
+    atomId          :: Int
+    -- | Atom name
   , atomName        :: Name
     -- | Names used at this level.
   , atomNames       :: [Name]
@@ -82,15 +87,22 @@ data AtomDB = AtomDB
   , atomEnableNH    :: Hash
     -- | Sub atoms.
   , atomSubs        :: [AtomDB]
+    -- | Atom period, if not the default of 1 then the global period is used
   , atomPeriod      :: Int
+    -- | Atom phase constraint
   , atomPhase       :: Phase
     -- | Sequence of (variable, shared expr) assignments arising from '<=='
   , atomAssigns     :: [(MUV, Hash)]
+    -- | Sequence of custom actions to take (only supported by the C code
+    --   generator), see 'action'
   , atomActions     :: [([String] -> String, [Hash])]
+    -- | Sequence of assertion statements
   , atomAsserts     :: [(Name, Hash)]
+    -- | Sequence of coverage statements
   , atomCovers      :: [(Name, Hash)]
-    -- | a list of (channel input, channel value hash) pairs for writes
+    -- | Set of (channel input, channel value hash) pairs for writes
   , atomChanWrite   :: [(ChanInput, Hash, ChannelDelay)]
+    -- | Set of channel outputs which are read by the atom
   , atomChanRead    :: [ChanOutput]
   }
 
@@ -113,7 +125,9 @@ instance Ord  AtomDB where compare a b = compare (atomId a) (atomId b)
 --
 -- XXX sum of records leads to partial record field functions
 data Rule
-  = Rule
+  = -- | An atomic computation. All the fields, except for 'ruleEnable' and
+    --   'ruleEnableNH' are simply copied from a corresponding 'AtomDB' value.
+    Rule
     { ruleId          :: Int
     , ruleName        :: Name
     , ruleEnable      :: Hash
@@ -123,15 +137,16 @@ data Rule
     , rulePeriod      :: Int
     , rulePhase       :: Phase
     , ruleChanWrite   :: [(ChanInput, Hash, ChannelDelay)]
-      -- ^ see corresonding field in AtomDB
     , ruleChanRead    :: [ChanOutput]
     }
-  | Assert
+  | -- | An assertion statement
+    Assert
     { ruleName      :: Name
     , ruleEnable    :: Hash
     , ruleAssert    :: Hash
     }
-  | Cover
+  | -- | A coverage statement
+    Cover
     { ruleName      :: Name
     , ruleEnable    :: Hash
     , ruleCover     :: Hash
@@ -182,7 +197,9 @@ elaborateRules parentEnable atom =
                         return (r : rs)
                  else rules
   where
-    -- are there either assignments, actions, or writeChannels to be done?
+    -- Are there either assignments, actions, or writeChannels to be done?
+    -- This check has the effect that atoms used as trivial outer shells
+    -- around other immediate atoms are not translated into rules.
     isRule = not $ null (atomAssigns atom)
                      && null (atomActions atom)
                      && null (atomChanWrite atom)
