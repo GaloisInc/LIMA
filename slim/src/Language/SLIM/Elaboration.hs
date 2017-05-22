@@ -3,6 +3,10 @@
 -- Description: -
 -- Copyright: (c) 2013 Tom Hawkins & Lee Pike
 
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Language.SLIM.Elaboration
   (
   -- * Atom monad and container.
@@ -21,14 +25,11 @@ module Language.SLIM.Elaboration
   , array
   , array'
   , addName
-  , get
-  , put
   , allUVs
   , allUEs
   , isHierarchyEmpty
   ) where
 
-import Control.Monad (ap)
 import qualified Control.Monad.State.Strict as S
 
 import Data.Function (on)
@@ -37,6 +38,9 @@ import Data.List (intercalate, nub, sort)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import Data.Maybe (isJust, isNothing)
+
+import MonadLib
+import MonadLib.Derive
 
 import Language.SLIM.Types
 import Language.SLIM.Channel.Types
@@ -352,56 +356,50 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
 -- | Evaluate the computation carried by the given atom and return an 'AtomDB'
 --   value, the intermediate representation for atoms at this level.
 buildAtom :: UeMap -> Global -> Name -> Atom a -> (a, AtomSt)
-buildAtom st g name (Atom f) =
+buildAtom st g name at {- (Atom f) -} =
   let (h,st') = newUE (ubool True) st
-  in f (st', ( g { gRuleId = gRuleId g + 1 }
-          , AtomDB
-              { atomId        = gRuleId g
-              , atomName      = name
-              , atomNames     = []
-              , atomEnable    = h
-              , atomEnableNH  = h
-              , atomSubs      = []
-              , atomPeriod    = gPeriod g
-              , atomPhase     = gPhase  g
-              , atomAssigns   = []
-              , atomActions   = []
-              , atomAsserts   = []
-              , atomCovers    = []
-              , atomChanWrite = []
-              , atomChanRead  = []
-              }
-          )
-    )
+      initAtst = (st', ( g { gRuleId = gRuleId g + 1 }
+                     , AtomDB
+                         { atomId        = gRuleId g
+                         , atomName      = name
+                         , atomNames     = []
+                         , atomEnable    = h
+                         , atomEnableNH  = h
+                         , atomSubs      = []
+                         , atomPeriod    = gPeriod g
+                         , atomPhase     = gPhase  g
+                         , atomAssigns   = []
+                         , atomActions   = []
+                         , atomAsserts   = []
+                         , atomCovers    = []
+                         , atomChanWrite = []
+                         , atomChanRead  = []
+                         }
+                       )
+                 )
+  in runState initAtst at
 
 type AtomSt = (UeMap, (Global, AtomDB))
 
--- | The Atom monad holds variable and rule declarations.
+-- | The Atom monad is a state monad over the cache and intermediate
+--   representation data needed to specifiy a guarded atomic action.
+newtype Atom a = Atom { unAtom :: StateT AtomSt Id a }
+  deriving (Applicative, Functor, Monad)
 
-data Atom a = Atom (AtomSt -> (a, AtomSt))
--- newtype Atom a = Atom { unAtom :: StateT AtomSt Id a }
+-- | Witness for the isomorphism between the newtype 'Atom' and the 'StateT'
+-- underneath.
+isoS :: Iso (StateT AtomSt Id) Atom
+isoS = Iso Atom unAtom
 
-instance Applicative Atom where
-  pure = return
-  (<*>) = ap
+-- | To get the non-unary type-class constraints we have to do a little work
+instance StateM Atom AtomSt where
+  get = derive_get isoS
+  set = derive_set isoS
 
-instance Functor Atom where
-  fmap = S.liftM
+-- | Run the state computation starting from the given initial 'AtomSt'.
+runState :: AtomSt -> Atom a -> (a, AtomSt)
+runState i = runId . runStateT i . unAtom
 
-instance Monad Atom where
-  return a = Atom (\s -> (a, s))
-  (Atom f1) >>= f2 = Atom f3
-    where
-    f3 s =
-      let (a, s') = f1 s
-          Atom f4 = f2 a
-      in f4 s'
-
-get :: Atom AtomSt
-get = Atom (\ s -> (s, s))
-
-put :: AtomSt -> Atom ()
-put s = Atom (\ _ -> ((), s))
 
 -- | Given a top level name and design, elaborates design and returns a design
 -- database.
@@ -495,7 +493,7 @@ var name init' = do
   (st, (g, atom)) <- get
   let uv' = UV (gVarId g) name' c
       c = constant init'
-  put (st, ( g { gVarId = gVarId g + 1
+  set (st, ( g { gVarId = gVarId g + 1
                , gState = gState g ++ [StateVariable name c]
                }
            , atom
@@ -515,7 +513,7 @@ array name init' = do
   (st, (g, atom)) <- get
   let ua = UA (gArrayId g) name' c
       c = map constant init'
-  put (st, ( g { gArrayId = gArrayId g + 1
+  set (st, ( g { gArrayId = gArrayId g + 1
                , gState = gState g ++ [StateArray name c]
                }
            , atom
@@ -539,7 +537,7 @@ addName name = do
     then error $ unwords [ "ERROR: Name \"" ++ name ++ "\" not unique in"
                          , show atom ++ "." ]
     else do
-      put (st, (g, atom { atomNames = name : atomNames atom }))
+      set (st, (g, atom { atomNames = name : atomNames atom }))
       return $ atomName atom ++ "." ++ name
 
 -- still accepts some malformed names, like "_.." or "_]["

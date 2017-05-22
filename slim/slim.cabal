@@ -44,6 +44,7 @@ library
     hs-source-dirs: src
     build-depends:
         base       >= 4.0     && < 5,
+        monadLib   >= 3.7.0   && < 4,
         mtl        ,
         process    ,
         syb        ,

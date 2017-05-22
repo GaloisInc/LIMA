@@ -74,6 +74,8 @@ import Data.Int
 import Data.Word
 import Data.List (foldl')
 
+import MonadLib
+
 import Language.SLIM.Channel
 import Language.SLIM.Channel.Types
 import Language.SLIM.Elaboration hiding (Atom)
@@ -93,7 +95,7 @@ atom name design = do
   name' <- addName name
   (st1, (g1, parent)) <- get
   let (a, (st2, (g2, child))) = buildAtom st1 g1 { gState = [] } name' design
-  put (st2, ( g2 { gState = gState g1 ++ [StateHierarchy name $ gState g2] }
+  set (st2, ( g2 { gState = gState g1 ++ [StateHierarchy name $ gState g2] }
             , parent { atomSubs = atomSubs parent ++ [child] }))
   return a
 
@@ -106,10 +108,10 @@ period :: Int -> Atom a -> Atom a
 period n _ | n <= 0 = error "ERROR: Execution period must be greater than 0."
 period n atom' = do
   (st, (g, a)) <- get
-  put (st, (g { gPeriod = n }, a))
+  set (st, (g { gPeriod = n }, a))
   r <- atom'
   (st', (g', a')) <- get
-  put (st', (g' { gPeriod = gPeriod g }, a'))
+  set (st', (g' { gPeriod = gPeriod g }, a'))
   return r
 
 -- | Returns the execution period of the current scope.
@@ -125,10 +127,10 @@ phase' phType n atom' = do
   if n >= gPeriod g
     then error $ "ERROR: phase " ++ show n ++ " must be less than the current period "
                ++ show (gPeriod g) ++ "."
-    else do put (st, (g { gPhase = phType n }, a))
+    else do set (st, (g { gPhase = phType n }, a))
             r <- atom'
             (st', (g', a')) <- get
-            put (st', (g' { gPhase = gPhase g }, a'))
+            set (st', (g' { gPhase = gPhase g }, a'))
             return r
 
 -- | Defines the earliest phase within the period at which the rule should
@@ -258,7 +260,7 @@ action f ues = do
         foldl' (\(accSt,hs) ue' ->
                  let (h,accSt') = newUE ue' accSt in (accSt',h:hs))
         (st,[]) ues
-  put (st', (g, a { atomActions = atomActions a ++ [(f, hashes)] }))
+  set (st', (g, a { atomActions = atomActions a ++ [(f, hashes)] }))
 
 -- | Calls an external C function of type 'void f(void)'.
 call :: Name -- ^ Function @f@
@@ -275,7 +277,7 @@ probe name a = do
   let (h,st') = newUE (ue a) st
   if any (\ (n, _) -> name == n) $ gProbes g
     then error $ "ERROR: Duplicated probe name: " ++ name
-    else put (st', (g { gProbes = (name, h) : gProbes g }, atom'))
+    else set (st', (g { gProbes = (name, h) : gProbes g }, atom'))
 
 -- | Fetches all declared probes to current design point.  The list contained
 -- therein is (probe name, untyped expression).
@@ -303,7 +305,7 @@ class Expr a => Assign a where
     (st, (g, atom')) <- get
     let (h,st0) = newUE (ue e) st
     let (muv,st1) = newUV (uv v) st0
-    put (st1, (g, atom' { atomAssigns = (muv, h) : atomAssigns atom' }))
+    set (st1, (g, atom' { atomAssigns = (muv, h) : atomAssigns atom' }))
 
 instance Assign Bool
 instance Assign Int8
@@ -325,7 +327,7 @@ cond c = do
   (st, (g, atom')) <- get
   let ae = recoverUE st (atomEnable atom')
   let (h, st') = newUE (uand ae (ue c)) st
-  put (st', (g, atom' { atomEnable = h }))
+  set (st', (g, atom' { atomEnable = h }))
 
 -- | Similar to 'cond', but does not inherit the enable condition from its
 -- parent.
@@ -333,7 +335,7 @@ cond' :: E Bool -> Atom ()
 cond' c = do
   (st, (g, atom')) <- get
   let (h, st') = newUE (ue c) st  -- no inheritance
-  put (st', (g, atom' { atomEnableNH = h }))
+  set (st', (g, atom' { atomEnableNH = h }))
 
 -- | Reference to the 64-bit free running clock.
 clock :: E Word64
@@ -357,7 +359,7 @@ assert name check = do
   -- when (name `elem` names)
   --      (liftIO $ putStrLn $ "WARNING: Assertion name already used: " ++ name)
   let (chk,st') = newUE (ue check) st
-  put (st', (g, atom' { atomAsserts = (name, chk) : atomAsserts atom' }))
+  set (st', (g, atom' { atomAsserts = (name, chk) : atomAsserts atom' }))
 
 -- | Implication assertions.  Creates an implicit coverage point for the
 -- precondition.
@@ -377,5 +379,5 @@ cover name check = do
   -- when (name `elem` names)
   --      (liftIO . putStrLn $ "WARNING: Coverage name already used: " ++ name)
   let (chk,st') = newUE (ue check) st
-  put (st', (g, atom' { atomCovers = (name, chk) : atomCovers atom' }))
+  set (st', (g, atom' { atomCovers = (name, chk) : atomCovers atom' }))
 

@@ -25,6 +25,8 @@ module Language.SLIM.Channel
   )
 where
 
+import MonadLib
+
 import Language.SLIM.Types
 import Language.SLIM.Channel.Types
 import Language.SLIM.Elaboration
@@ -46,7 +48,7 @@ channel name t = do
   (st, (g, atom)) <- get
   let cin  = mkChanInput (gChannelId g) name' t
       cout = mkChanOutput (gChannelId g) name' t
-  put (st, ( g { gChannelId = gChannelId g + 1
+  set (st, ( g { gChannelId = gChannelId g + 1
                , gState = gState g ++ [StateChannel sName t]
                }
            , atom
@@ -63,7 +65,7 @@ writeChannelWithDelay :: Expr a => ChannelDelay -> ChanInput -> E a -> Atom ()
 writeChannelWithDelay d cin e = do
   (st, (g, atom)) <- get
   let (h, st0) = newUE (ue e) st
-  put (st0, (g, atom { atomChanWrite = atomChanWrite atom
+  set (st0, (g, atom { atomChanWrite = atomChanWrite atom
                                     ++ [(cin, h, d)] }))
 
 -- | Default delay specialization of the above.
@@ -76,7 +78,7 @@ writeChannel = writeChannelWithDelay DelayDefault
 readChannel :: ChanOutput -> Atom (E a)
 readChannel cout = do
   (st, (g, atom)) <- get
-  put (st, (g, atom { atomChanRead = atomChanRead atom ++ [cout] }))
+  set (st, (g, atom { atomChanRead = atomChanRead atom ++ [cout] }))
   return . VRef . V . chanVar $ cout
 
 -- | Check if the channel contains a message.
