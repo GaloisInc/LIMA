@@ -28,6 +28,8 @@ module Language.SLIM.Elaboration
   , allUVs
   , allUEs
   , isHierarchyEmpty
+  , initialGlobal
+  , getChannels
   ) where
 
 import qualified Control.Monad.State.Strict as S
@@ -356,7 +358,7 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
 -- | Evaluate the computation carried by the given atom and return an 'AtomDB'
 --   value, the intermediate representation for atoms at this level.
 buildAtom :: UeMap -> Global -> Name -> Atom a -> (a, AtomSt)
-buildAtom st g name at {- (Atom f) -} =
+buildAtom st g name at =
   let (h,st') = newUE (ubool True) st
       initAtst = (st', ( g { gRuleId = gRuleId g + 1 }
                      , AtomDB
@@ -414,6 +416,8 @@ elaborate :: UeMap -> Name -> Atom ()
                          , [(Name, Type)])
                        ))
 elaborate st name atom = do
+      -- buildAtom runs the state computation contained by the atom, at the
+      -- top-level here the atom result value is discarded
   let (_, (st0, (g, atomDB))) = buildAtom st initialGlobal name atom
       (h, st1)        = newUE (ubool True) st0
       (getRules, st2) = S.runState (elaborateRules h atomDB) st1
