@@ -68,14 +68,18 @@ mkDotGraph atm = do
 
   where
     flatten adb = do
+      let subs = E.atomSubs adb
       let n = T.pack (E.atomName adb)
-      cluster (Str n) $ do
-        node n atomAttrs
-        let subs = E.atomSubs adb
-        let gps = map flatten subs
-        sequence_ gps
-        forM_ subs $ \s -> do
-          n --> T.pack (E.atomName s)
+      if null subs
+         then
+           node n atomAttrs
+         else
+           cluster (Str n) $ do
+             node n atomAttrs
+             let gps = map flatten subs
+             sequence_ gps
+             forM_ subs $ \s -> do
+               n --> T.pack (E.atomName s)
 
     addChannels cs rm = forM_ cs $ \(_cid, cinf) -> do
       let s0 = E.cinfoSrc cinf
