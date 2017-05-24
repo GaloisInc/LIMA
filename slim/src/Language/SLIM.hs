@@ -19,7 +19,8 @@ module Language.SLIM
   ( -- * Common
     -- | Module: "Language.SLIM.Common"
     Timer, timer, startTimer, startTimerIf, timerDone, oneShotRise,
-    oneShotFall, debounce, lookupTable, linear, hysteresis,
+    oneShotFall, debounce, lookupTable, linear, hysteresis, clocked,
+    mkSWEther, mkStarBus,
     -- ** Signal fading
     -- | Module: "Language.SLIM.Common.Fader"
     Fader, FaderInit (..), fader, fadeToA, fadeToB, fadeToCenter,

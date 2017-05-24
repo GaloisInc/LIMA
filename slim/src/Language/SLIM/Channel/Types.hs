@@ -7,7 +7,7 @@ module Language.SLIM.Channel.Types (
   , HasChan(..)
 ) where
 
-import Data.Int (Int64)
+import Data.Word (Word64)
 
 import Language.SLIM.Types
 import Language.SLIM.Expressions
@@ -37,7 +37,7 @@ mkChanOutput = ChanOutput
 
 -- | Channel delay specification
 data ChannelDelay = DelayDefault
-                  | DelayTicks Int64
+                  | DelayTicks Word64
 
 
 -- Channel Operations --------------------------------------------------

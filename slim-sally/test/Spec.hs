@@ -219,6 +219,91 @@ atom6 = atom "atom6" $ do
     cond (value c)
     c <== false
 
+-- Examples of Layerd Atoms --------------------------------------------------
+
+-- | A simple system A --> B where the link inbetween is realized as a
+-- redundant switched ethernet network.
+atomWithSWEther :: Atom ()
+atomWithSWEther = atom "atomLayered" $ do
+
+  -- declare the switched ethernet fabric for 2 nodes with 2 internal switches
+  chans <- mkSWEther 2 2
+  let (nodeAToE, eToNodeA) = chans !! 0  :: (ChanInput, ChanOutput)
+  let (_       , eToNodeB) = chans !! 1  :: (ChanInput, ChanOutput)
+
+  -- node A
+  atom "node_A" $ do
+    msg <- int64 "msg" 0
+    -- send a message
+    atom "sender" $ do
+      done <- bool "done" False
+      cond $ not_ (value done)
+      writeChannel nodeAToE (1 :: E Typ)
+      done <== true
+
+    atom "receiver" $ do
+      -- store received messages
+      cond $ fullChannel eToNodeA
+      v <- readChannel eToNodeA
+      msg <== v
+
+  atom "node_B" $ do
+    msg <- int64 "msg" 0
+    -- store received messages
+    cond $ fullChannel eToNodeB
+    v <- readChannel eToNodeB
+    msg <== v
+
+-- | A simple system of three nodes connected to a bus.
+atomWithBus :: Atom ()
+atomWithBus = atom "atomBus" $ do
+  -- some constants with type annotations so we don't have to repeat them
+  let zero  = Const 0 :: E Int64
+      one   = Const 1 :: E Int64
+      two   = Const 2 :: E Int64
+      three = Const 3 :: E Int64
+
+  -- create the bus fabric, getting back channel endpoints that nodes can use
+  [csA, csB, csC] <- mkStarBus 3
+
+  -- Function that makes a node parametrized on 'per', a period (counted in
+  -- terms of messages received), 'cin' a channel input to the bus, and 'cout'
+  -- a channel outout from the bus. The node listens for messages from A B or
+  -- C and increments counters accordingly. Every 'per' messages it receives
+  -- it broadcasts it's own message to the bus.
+  let mkNode ident per cin cout = atom ("node_" ++ show ident) $ do
+        seenA <- int64 "seenA" 0
+        seenB <- int64 "seenB" 0
+        seenC <- int64 "seenC" 0
+        counter <- int64 "counter" 0
+
+        -- listener
+        atom "listener" $ do
+          cond $ fullChannel cout
+          v <- readChannel cout
+          -- TODO this is awkward to express
+          seenA <== mux (v ==. one) (1 + value seenA) (value seenA)
+          seenB <== mux (v ==. two) (1 + value seenB) (value seenB)
+          seenC <== mux (v ==. three) (1 + value seenC) (value seenC)
+          incr counter
+
+        -- broadcaster
+        atom "broadcaster" $ do
+          cond $ value counter >. per
+          counter <== zero
+          writeChannel cin ident
+
+  -- create nodes with different parameters using the mkNode function
+  mkNode one   two   (fst csA) (snd csA)    -- node 1, period 2
+  mkNode two   three (fst csB) (snd csB)    -- node 2, period 3
+  mkNode three one   (fst csC) (snd csC)    -- node 3, period 1
+
+  -- kickstart the system by putting a message on the bus as node C
+  done <- bool "done" False
+  cond $ not_ (value done)
+  done <== true
+  writeChannel (fst csC) three
+
 
 -- Configurations --------------------------------------------------------------
 
@@ -288,6 +373,8 @@ suite =
                 , "    (=> A4!atom4!nodeC!done (= A4!__t 2)))"])
   , ("A5", atom5, defSpecCfg, "")
   , ("A6", atom5, defSpecCfg, "")
+  , ("ASWEther", atomWithSWEther, defSpecCfg, "")
+  , ("ABus", atomWithBus, defSpecCfg, "")
   ]
 
 main :: IO ()
