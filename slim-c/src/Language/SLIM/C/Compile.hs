@@ -41,6 +41,8 @@ compile :: Name
         -> Atom ()
         -> IO CompileResult
 compile name config atom' = do
+  -- TODO an Atom () -> Atom () rewriting step could be inserted here before
+  -- elaboration
   res <- elaborate emptyMap name atom'
   case res of
    Nothing -> putStrLn "ERROR: Design rule checks failed." >>

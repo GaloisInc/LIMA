@@ -68,6 +68,8 @@ module Language.SLIM.Language
   , clock
   -- * Code Coverage
   , nextCoverage
+  -- * Rewriting
+  , rewriteAtom
   ) where
 
 import Data.Int
@@ -380,4 +382,23 @@ cover name check = do
   --      (liftIO . putStrLn $ "WARNING: Coverage name already used: " ++ name)
   let (chk,st') = newUE (ue check) st
   set (st', (g, atom' { atomCovers = (name, chk) : atomCovers atom' }))
+
+-- | Recursive bottom-up rewrite an atom.
+rewriteAtom :: (Atom () -> Atom ()) -> Atom () -> Atom ()
+rewriteAtom rw atm = rw atm'
+  where
+    atm' = do
+      _ <- atm
+      (u, (g, db)) <- get
+      let subs = atomSubs db
+      let f :: (UeMap, Global, [AtomDB]) -> AtomDB -> Atom (UeMap, Global, [AtomDB])
+          f (u0, g0, adbs) adb = do
+            let a = set (u0, (g0, adb))  -- make an atom of adb
+            let a' = rewriteAtom rw a  -- rewrite the atom using u, g
+            _ <- a'                    -- run the rewritten atom
+            (u0', (g0', adb')) <- get
+            return (u0', g0', adbs ++ [adb'])
+      (u', g', adbs') <- foldM f (u, g, []) subs
+      let db' = db { atomSubs = adbs' }
+      set (u', (g', db'))  -- update state of parent
 
