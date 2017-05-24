@@ -34,11 +34,11 @@ import Language.SLIM.UeMap (emptyMap)
 
 -- Atrributes for nodes and edges ----------------------------------------------
 
-chanAttrs :: [Attributes]
-chanAttrs = [color Purple, style Dashed]
+chanAttrs :: Attributes
+chanAttrs = [color Purple, style dashed]
 
-atomAttrs :: [Attributes]
-atomAttrs = [textLabel "\\N", color Black, shape Diamond]
+atomAttrs :: Attributes
+atomAttrs = [textLabel "\\N", color Black, shape DiamondShape]
 
 
 -- Graph producing functions ---------------------------------------------------
