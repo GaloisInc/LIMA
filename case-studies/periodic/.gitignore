@@ -1,0 +1,5 @@
+periodic
+periodic.c
+periodic.h
+periodic.mcmt
+cabal.project.local

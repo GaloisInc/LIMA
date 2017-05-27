@@ -1,0 +1,1328 @@
+;; Constants
+;; NONE
+
+;; State type
+(define-state-type
+ periodic_ex3_state_type
+ ((periodic_ex3!ex3!__channel_ach!var Bool)
+  (periodic_ex3!ex3!__channel_ach!time Real)
+  (periodic_ex3!ex3!__channel_bch!var Bool)
+  (periodic_ex3!ex3!__channel_bch!time Real)
+  (periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done Bool)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+   Bool)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+   Real)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+   Bool)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+   Real)
+  (periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+   Int)
+  (periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done Bool)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+   Bool)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+   Real)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+   Bool)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+   Real)
+  (periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+   Int)
+  (periodic_ex3!__faulty_node!0 Int)
+  (periodic_ex3!__faulty_node!1 Int)
+  (periodic_ex3!__faulty_node!2 Int)
+  (periodic_ex3!__faulty_node!3 Int)
+  (periodic_ex3!__faulty_node!4 Int)
+  (periodic_ex3!__faulty_node!5 Int)
+  (periodic_ex3!__global_clock Real))
+ ((periodic_ex3!ex3!__channel_ach!fault Bool)
+  (periodic_ex3!ex3!__channel_bch!fault Bool)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!fault
+   Bool)
+  (periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!fault
+   Bool)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!fault
+   Bool)
+  (periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!fault
+   Bool)))
+
+;; State Formulas
+(define-states
+ periodic_ex3_mfa_formula
+ periodic_ex3_state_type
+ (and
+  (= periodic_ex3!__faulty_node!0 0)
+  (= periodic_ex3!__faulty_node!1 0)
+  (= periodic_ex3!__faulty_node!2 0)
+  (= periodic_ex3!__faulty_node!3 0)
+  (= periodic_ex3!__faulty_node!4 0)
+  (= periodic_ex3!__faulty_node!5 0)))
+;;
+(define-states
+ periodic_ex3_lemmas
+ periodic_ex3_state_type
+ (<= 0 periodic_ex3!__global_clock))
+;;
+(define-states
+ periodic_ex3_assumptions
+ periodic_ex3_state_type
+ (and periodic_ex3_mfa_formula periodic_ex3_lemmas))
+
+;; Initial State
+(define-states
+ periodic_ex3_initial_state
+ periodic_ex3_state_type
+ (and
+  (= periodic_ex3!ex3!__channel_ach!var false)
+  (= periodic_ex3!ex3!__channel_ach!time (-1))
+  (= periodic_ex3!ex3!__channel_bch!var false)
+  (= periodic_ex3!ex3!__channel_bch!time (-1))
+  (= periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done false)
+  (=
+   periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+   false)
+  (=
+   periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+   (-1))
+  (=
+   periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+   false)
+  (=
+   periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+   (-1))
+  (=
+   periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+   0)
+  (= periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done false)
+  (=
+   periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+   false)
+  (=
+   periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+   (-1))
+  (=
+   periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+   false)
+  (=
+   periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+   (-1))
+  (=
+   periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+   0)
+  (= periodic_ex3!__global_clock 0)
+  periodic_ex3_assumptions
+  true
+  (<= 0 periodic_ex3!__faulty_node!0)
+  (<= 0 periodic_ex3!__faulty_node!1)
+  (<= 0 periodic_ex3!__faulty_node!2)
+  (<= 0 periodic_ex3!__faulty_node!3)
+  (<= 0 periodic_ex3!__faulty_node!4)
+  (<= 0 periodic_ex3!__faulty_node!5)
+  (<= periodic_ex3!__faulty_node!0 3)
+  (<= periodic_ex3!__faulty_node!1 3)
+  (<= periodic_ex3!__faulty_node!2 3)
+  (<= periodic_ex3!__faulty_node!3 3)
+  (<= periodic_ex3!__faulty_node!4 3)
+  (<= periodic_ex3!__faulty_node!5 3)))
+
+;; Transitions
+(define-transition
+ periodic_ex3_transition_0
+ periodic_ex3_state_type
+ (let
+  ((temp!0 state.periodic_ex3!ex3!alice!periodic_ex3!ex3!alice_init_done)
+   (temp!1 (not temp!0))
+   (temp!2 true))
+  (and
+   (= next.periodic_ex3!ex3!alice!periodic_ex3!ex3!alice_init_done temp!2)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!var
+    temp!2)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+    (ite
+     (and temp!1 temp!2)
+     (+
+      (+ state.periodic_ex3!__global_clock 1)
+      state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!delta)
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!var
+    state.periodic_ex3!ex3!__channel_ach!var)
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    state.periodic_ex3!ex3!__channel_ach!time)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!var
+    state.periodic_ex3!ex3!__channel_bch!var)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    state.periodic_ex3!ex3!__channel_bch!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_transition_1
+ periodic_ex3_state_type
+ (let
+  ((temp!0
+    (=
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!1 (not temp!0))
+   (temp!2
+    (=
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!3 (not temp!2))
+   (temp!4 (and temp!1 temp!3))
+   (temp!5 (not temp!4))
+   (temp!6
+    (=
+     state.periodic_ex3!ex3!__channel_bch!time
+     state.periodic_ex3!__global_clock))
+   (temp!7 (and temp!5 temp!6))
+   (temp!8 true)
+   (temp!9
+    state.periodic_ex3!ex3!alice!periodic_ex3!ex3!alice_clocked!periodic_ex3!ex3!alice_node!x)
+   (temp!10 1)
+   (temp!11 (+ temp!9 temp!10))
+   (temp!12 (ite temp!7 temp!11 temp!9)))
+  (and
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3!ex3!alice_clocked!periodic_ex3!ex3!alice_node!x
+    temp!12)
+   (= next.periodic_ex3!ex3!__channel_ach!var temp!8)
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    (ite
+     (and temp!7 temp!8)
+     (+
+      (+ state.periodic_ex3!__global_clock 1)
+      state.periodic_ex3!ex3!__channel_ach!delta)
+     state.periodic_ex3!ex3!__channel_ach!time))
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    (ite
+     (and temp!7 temp!8)
+     (-1)
+     state.periodic_ex3!ex3!__channel_bch!time))
+   (=
+    next.periodic_ex3!ex3!__channel_bch!var
+    state.periodic_ex3!ex3!__channel_bch!var)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_transition_2
+ periodic_ex3_state_type
+ (let
+  ((temp!0
+    (=
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!1 (not temp!0))
+   (temp!2
+    (=
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!3 (not temp!2))
+   (temp!4 (and temp!1 temp!3))
+   (temp!5 (not temp!4))
+   (temp!6 true))
+  (and
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!var
+    temp!6)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (+
+      (+ state.periodic_ex3!__global_clock 2)
+      state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!delta)
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time))
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (-1)
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time))
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (-1)
+     state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!var
+    state.periodic_ex3!ex3!__channel_ach!var)
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    state.periodic_ex3!ex3!__channel_ach!time)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!var
+    state.periodic_ex3!ex3!__channel_bch!var)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    state.periodic_ex3!ex3!__channel_bch!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_transition_3
+ periodic_ex3_state_type
+ (let
+  ((temp!0 state.periodic_ex3!ex3!bob!periodic_ex3!ex3!bob_init_done)
+   (temp!1 (not temp!0))
+   (temp!2 true))
+  (and
+   (= next.periodic_ex3!ex3!bob!periodic_ex3!ex3!bob_init_done temp!2)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!var
+    temp!2)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+    (ite
+     (and temp!1 temp!2)
+     (+
+      (+ state.periodic_ex3!__global_clock 0)
+      state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!delta)
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!var
+    state.periodic_ex3!ex3!__channel_ach!var)
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    state.periodic_ex3!ex3!__channel_ach!time)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!var
+    state.periodic_ex3!ex3!__channel_bch!var)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    state.periodic_ex3!ex3!__channel_bch!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_transition_4
+ periodic_ex3_state_type
+ (let
+  ((temp!0
+    (=
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!1 (not temp!0))
+   (temp!2
+    (=
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!3 (not temp!2))
+   (temp!4 (and temp!1 temp!3))
+   (temp!5 (not temp!4))
+   (temp!6
+    (=
+     state.periodic_ex3!ex3!__channel_ach!time
+     state.periodic_ex3!__global_clock))
+   (temp!7 (and temp!5 temp!6))
+   (temp!8 true)
+   (temp!9
+    state.periodic_ex3!ex3!bob!periodic_ex3!ex3!bob_clocked!periodic_ex3!ex3!bob_node!x)
+   (temp!10 1)
+   (temp!11 (+ temp!9 temp!10))
+   (temp!12 (ite temp!7 temp!11 temp!9)))
+  (and
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3!ex3!bob_clocked!periodic_ex3!ex3!bob_node!x
+    temp!12)
+   (= next.periodic_ex3!ex3!__channel_bch!var temp!8)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    (ite
+     (and temp!7 temp!8)
+     (+
+      (+ state.periodic_ex3!__global_clock 1)
+      state.periodic_ex3!ex3!__channel_bch!delta)
+     state.periodic_ex3!ex3!__channel_bch!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    (ite
+     (and temp!7 temp!8)
+     (-1)
+     state.periodic_ex3!ex3!__channel_ach!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!var
+    state.periodic_ex3!ex3!__channel_ach!var)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_transition_5
+ periodic_ex3_state_type
+ (let
+  ((temp!0
+    (=
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!1 (not temp!0))
+   (temp!2
+    (=
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time
+     state.periodic_ex3!__global_clock))
+   (temp!3 (not temp!2))
+   (temp!4 (and temp!1 temp!3))
+   (temp!5 (not temp!4))
+   (temp!6 true))
+  (and
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!var
+    temp!6)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (+
+      (+ state.periodic_ex3!__global_clock 2)
+      state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!delta)
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (-1)
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+    (ite
+     (and temp!5 temp!6)
+     (-1)
+     state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time))
+   (=
+    next.periodic_ex3!ex3!__channel_ach!var
+    state.periodic_ex3!ex3!__channel_ach!var)
+   (=
+    next.periodic_ex3!ex3!__channel_ach!time
+    state.periodic_ex3!ex3!__channel_ach!time)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!var
+    state.periodic_ex3!ex3!__channel_bch!var)
+   (=
+    next.periodic_ex3!ex3!__channel_bch!time
+    state.periodic_ex3!ex3!__channel_bch!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+    state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+    state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+   (=
+    next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+    state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+   (=
+    next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+    state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+   (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+   (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+   (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+   (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+   (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+   (= next.periodic_ex3!__faulty_node!5 state.periodic_ex3!__faulty_node!5)
+   (=
+    next.periodic_ex3!__global_clock
+    state.periodic_ex3!__global_clock))))
+;;
+(define-transition
+ periodic_ex3_clock_transition
+ periodic_ex3_state_type
+ (and
+  (<
+   state.periodic_ex3!__global_clock
+   (ite
+    (and
+     (<
+      state.periodic_ex3!ex3!__channel_ach!time
+      state.periodic_ex3!ex3!__channel_bch!time)
+     (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+    (ite
+     (and
+      (<
+       state.periodic_ex3!ex3!__channel_ach!time
+       state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time)
+      (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!__channel_ach!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!__channel_ach!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!__channel_ach!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+        state.periodic_ex3!ex3!__channel_ach!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not
+        (=
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))))
+    (ite
+     (and
+      (<
+       state.periodic_ex3!ex3!__channel_bch!time
+       state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time)
+      (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!__channel_bch!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!__channel_bch!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!__channel_bch!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+        state.periodic_ex3!ex3!__channel_bch!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not
+        (=
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))))))
+  (=
+   next.periodic_ex3!__global_clock
+   (ite
+    (and
+     (<
+      state.periodic_ex3!ex3!__channel_ach!time
+      state.periodic_ex3!ex3!__channel_bch!time)
+     (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+    (ite
+     (and
+      (<
+       state.periodic_ex3!ex3!__channel_ach!time
+       state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time)
+      (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!__channel_ach!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!__channel_ach!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!__channel_ach!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not (= state.periodic_ex3!ex3!__channel_ach!time (-1))))
+        state.periodic_ex3!ex3!__channel_ach!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not
+        (=
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))))
+    (ite
+     (and
+      (<
+       state.periodic_ex3!ex3!__channel_bch!time
+       state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time)
+      (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!__channel_bch!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!__channel_bch!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!__channel_bch!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not (= state.periodic_ex3!ex3!__channel_bch!time (-1))))
+        state.periodic_ex3!ex3!__channel_bch!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)))
+     (ite
+      (and
+       (<
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time)
+       (not
+        (=
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         (-1))))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))
+      (ite
+       (and
+        (<
+         state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+         state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time)
+        (not
+         (=
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          (-1))))
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!alice!__channel_periodic_ex3!ex3!alice_kick_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+       (ite
+        (and
+         (<
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+          state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time)
+         (not
+          (=
+           state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+           (-1))))
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_init_channel!time
+        state.periodic_ex3!ex3!bob!__channel_periodic_ex3!ex3!bob_kick_channel!time))))))
+  true
+  (=
+   next.periodic_ex3!ex3!__channel_ach!var
+   state.periodic_ex3!ex3!__channel_ach!var)
+  (=
+   next.periodic_ex3!ex3!__channel_ach!time
+   state.periodic_ex3!ex3!__channel_ach!time)
+  (=
+   next.periodic_ex3!ex3!__channel_bch!var
+   state.periodic_ex3!ex3!__channel_bch!var)
+  (=
+   next.periodic_ex3!ex3!__channel_bch!time
+   state.periodic_ex3!ex3!__channel_bch!time)
+  (=
+   next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done
+   state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_init_done)
+  (=
+   next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var
+   state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!var)
+  (=
+   next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time
+   state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_init_channel!time)
+  (=
+   next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var
+   state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!var)
+  (=
+   next.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time
+   state.periodic_ex3!ex3!alice!__channel_periodic_ex3.ex3.alice_kick_channel!time)
+  (=
+   next.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x
+   state.periodic_ex3!ex3!alice!periodic_ex3.ex3.alice_clocked!periodic_ex3.ex3.alice_node!x)
+  (=
+   next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done
+   state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_init_done)
+  (=
+   next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var
+   state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!var)
+  (=
+   next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time
+   state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_init_channel!time)
+  (=
+   next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var
+   state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!var)
+  (=
+   next.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time
+   state.periodic_ex3!ex3!bob!__channel_periodic_ex3.ex3.bob_kick_channel!time)
+  (=
+   next.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x
+   state.periodic_ex3!ex3!bob!periodic_ex3.ex3.bob_clocked!periodic_ex3.ex3.bob_node!x)
+  (= next.periodic_ex3!__faulty_node!0 state.periodic_ex3!__faulty_node!0)
+  (= next.periodic_ex3!__faulty_node!1 state.periodic_ex3!__faulty_node!1)
+  (= next.periodic_ex3!__faulty_node!2 state.periodic_ex3!__faulty_node!2)
+  (= next.periodic_ex3!__faulty_node!3 state.periodic_ex3!__faulty_node!3)
+  (= next.periodic_ex3!__faulty_node!4 state.periodic_ex3!__faulty_node!4)
+  (=
+   next.periodic_ex3!__faulty_node!5
+   state.periodic_ex3!__faulty_node!5)))
+;;
+(define-transition
+ periodic_ex3_transition
+ periodic_ex3_state_type
+ (and
+  next.periodic_ex3_assumptions
+  (or
+   periodic_ex3_transition_0
+   periodic_ex3_transition_1
+   periodic_ex3_transition_2
+   periodic_ex3_transition_3
+   periodic_ex3_transition_4
+   periodic_ex3_transition_5
+   periodic_ex3_clock_transition)))
+
+;; System Definition
+(define-transition-system
+ periodic_ex3_transition_system
+ periodic_ex3_state_type
+ periodic_ex3_initial_state
+ periodic_ex3_transition)

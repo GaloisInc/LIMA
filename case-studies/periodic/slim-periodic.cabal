@@ -1,0 +1,17 @@
+name:                slim-periodic
+version:             0.1.0.0
+synopsis:            Periodic examples in SLIM
+author:              Benjamin Jones
+maintainer:          bjones@galois.com
+category:            Language
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable slim-periodic
+  default-language:    Haskell2010
+  main-is:             Main.hs
+  other-modules:       Periodic
+  build-depends:       base >= 4.8   && < 4.10
+                     , slim >= 0.1.0.0 && < 0.2
+                     , slim-c >= 0.1.0.0 && < 0.2
+                     , slim-sally >= 0.1.0.0 && < 0.2

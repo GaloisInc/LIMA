@@ -1,0 +1,72 @@
+;; Constants
+;; NONE
+
+;; State type
+(define-state-type
+ periodic_rw_ex1_state_type
+ ((periodic_rw_ex1!ex1!b Bool)
+  (periodic_rw_ex1!__faulty_node!0 Int)
+  (periodic_rw_ex1!__global_clock Real)))
+
+;; State Formulas
+(define-states
+ periodic_rw_ex1_mfa_formula
+ periodic_rw_ex1_state_type
+ (and (= periodic_rw_ex1!__faulty_node!0 0)))
+;;
+(define-states
+ periodic_rw_ex1_lemmas
+ periodic_rw_ex1_state_type
+ (<= 0 periodic_rw_ex1!__global_clock))
+;;
+(define-states
+ periodic_rw_ex1_assumptions
+ periodic_rw_ex1_state_type
+ (and periodic_rw_ex1_mfa_formula periodic_rw_ex1_lemmas))
+
+;; Initial State
+(define-states
+ periodic_rw_ex1_initial_state
+ periodic_rw_ex1_state_type
+ (and
+  (= periodic_rw_ex1!ex1!b false)
+  (= periodic_rw_ex1!__global_clock 0)
+  periodic_rw_ex1_assumptions
+  true
+  (<= 0 periodic_rw_ex1!__faulty_node!0)
+  (<= periodic_rw_ex1!__faulty_node!0 3)))
+
+;; Transitions
+(define-transition
+ periodic_rw_ex1_transition_0
+ periodic_rw_ex1_state_type
+ (let
+  ((temp!0 true))
+  (and
+   (= next.foo!ex1!b temp!0)
+   (= next.periodic_rw_ex1!ex1!b state.periodic_rw_ex1!ex1!b)
+   (=
+    next.periodic_rw_ex1!__faulty_node!0
+    state.periodic_rw_ex1!__faulty_node!0)
+   (=
+    next.periodic_rw_ex1!__global_clock
+    state.periodic_rw_ex1!__global_clock))))
+;;
+(define-transition
+ periodic_rw_ex1_clock_transition
+ periodic_rw_ex1_state_type
+ false)
+;;
+(define-transition
+ periodic_rw_ex1_transition
+ periodic_rw_ex1_state_type
+ (and
+  next.periodic_rw_ex1_assumptions
+  (or periodic_rw_ex1_transition_0 periodic_rw_ex1_clock_transition)))
+
+;; System Definition
+(define-transition-system
+ periodic_rw_ex1_transition_system
+ periodic_rw_ex1_state_type
+ periodic_rw_ex1_initial_state
+ periodic_rw_ex1_transition)
