@@ -11,6 +11,9 @@ module Language.SLIM.Elaboration
   (
   -- * Atom monad and container.
     Atom
+  , CompCtx  (..)
+  , defCCtx
+  , defSCtx
   , AtomDB   (..)
   , Global   (..)
   , Rule     (..)
@@ -115,8 +118,9 @@ data AtomDB = AtomDB
 instance Show AtomDB where
   show a = "AtomDB { " ++ intercalate ", " [ show (atomId a)
                                            , atomName a
-                                           -- , show (atomEnable a)
-                                           -- , show (atomEnableNH a)
+                                           , "subs " ++ show (length (atomSubs a))
+                                           , "per " ++ show (atomPeriod a)
+                                           , "pha " ++ show (atomPhase a)
                                            ] ++ " }"  -- TODO more detail?
 instance Eq   AtomDB where (==) = (==) `on` atomId
 instance Ord  AtomDB where compare a b = compare (atomId a) (atomId b)
@@ -357,8 +361,15 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
 
 -- | Evaluate the computation carried by the given atom and return an 'AtomDB'
 --   value, the intermediate representation for atoms at this level.
-buildAtom :: UeMap -> Global -> Name -> Atom a -> (a, AtomSt)
-buildAtom st g name at =
+buildAtom
+  :: CompCtx      -- ^ compiler context to start with
+  -> UeMap        -- ^ untyped expression map to start with
+  -> Global       -- ^ global data to start with
+  -> Name         -- ^ top-level name of the atom design
+  -> Atom a       -- ^ atom to evaluate
+  -> ((a, CompNotes), AtomSt)  -- ^ atom return value, underlying final
+                               -- evaluation state, and emitted warnings
+buildAtom ctx st g name at =
   let (h,st') = newUE (ubool True) st
       initAtst = (st', ( g { gRuleId = gRuleId g + 1 }
                      , AtomDB
@@ -379,18 +390,42 @@ buildAtom st g name at =
                          }
                        )
                  )
-  in runState initAtst at
+  in runAtom ctx initAtst at
 
+-- | Atom State type.
 type AtomSt = (UeMap, (Global, AtomDB))
+-- | Compiler Warnings.
+type CompNotes = [String]
+-- | Compiler Context, used to switch certain operations depending on the
+--   compiler backend, e.g. switch from "scheduled periodicity" to "clocked
+--   periodicity".
+data CompCtx = CompCtx {
+    -- ^ periodicity type to compile with; True = clocked periodicty, False =
+    --   scheduled periodicity (only applicable to, and the default for, the C
+    --   code backend).
+    cctxPeriodicity :: Bool
+  }
+
+-- | The default C code backend compilation context; scheduled periodicity is
+-- enabled.
+defCCtx :: CompCtx
+defCCtx = CompCtx { cctxPeriodicity = False }
+
+-- | The default Sally Model backend compilation context; clocked periodicity
+-- is enabled.
+defSCtx :: CompCtx
+defSCtx = CompCtx { cctxPeriodicity = True }
 
 -- | The Atom monad is a state monad over the cache and intermediate
 --   representation data needed to specifiy a guarded atomic action.
-newtype Atom a = Atom { unAtom :: StateT AtomSt Id a }
+newtype Atom a = Atom { unAtom :: ReaderT CompCtx
+                                          (WriterT CompNotes
+                                                   (StateT AtomSt Id)) a }
   deriving (Applicative, Functor, Monad)
 
 -- | Witness for the isomorphism between the newtype 'Atom' and the 'StateT'
 -- underneath.
-isoS :: Iso (StateT AtomSt Id) Atom
+isoS :: Iso (ReaderT CompCtx (WriterT CompNotes (StateT AtomSt Id))) Atom
 isoS = Iso Atom unAtom
 
 -- | To get the non-unary type-class constraints we have to do a little work
@@ -398,10 +433,19 @@ instance StateM Atom AtomSt where
   get = derive_get isoS
   set = derive_set isoS
 
--- | Run the state computation starting from the given initial 'AtomSt'.
-runState :: AtomSt -> Atom a -> (a, AtomSt)
-runState i = runId . runStateT i . unAtom
+instance ReaderM Atom CompCtx where
+  ask = derive_ask isoS
 
+instance WriterM Atom CompNotes where
+  put = derive_put isoS
+
+-- | Run the state computation starting from the given initial 'AtomSt'.
+runAtom :: CompCtx -> AtomSt -> Atom a -> ((a, CompNotes), AtomSt)
+runAtom ctx st = runId           -- ((a, i1), i2)
+               . runStateT st    -- IdT ((a, i1), i2)
+               . runWriterT      -- StateT i2 IdT (a, i1)
+               . runReaderT ctx  -- WriterT i1 (StateT i2 IdT) a
+               . unAtom          -- ReaderT i0 (WriterT i1 (StateT i2 IdT)) a
 
 -- | Given a top level name and design, elaborates design and returns a design
 -- database.
@@ -410,15 +454,16 @@ runState i = runId . runStateT i . unAtom
 -- function, but I don't want to go change all the UeState monads to UeStateT
 -- monads.
 --
-elaborate :: UeMap -> Name -> Atom ()
+elaborate :: CompCtx -> UeMap -> Name -> Atom ()
           -> IO (Maybe ( UeMap
                        , (  StateHierarchy, [Rule], [ChanInfo], [Name], [Name]
                          , [(Name, Type)])
                        ))
-elaborate st name atom = do
+elaborate ctx st name atom = do
       -- buildAtom runs the state computation contained by the atom, at the
       -- top-level here the atom result value is discarded
-  let (_, (st0, (g, atomDB))) = buildAtom st initialGlobal name atom
+  let ((_, nts), atst) = buildAtom ctx st initialGlobal name atom
+      (st0, (g, atomDB)) = atst
       (h, st1)        = newUE (ubool True) st0
       (getRules, st2) = S.runState (elaborateRules h atomDB) st1
       rules           = reIdRules 0 (reverse getRules)
@@ -427,6 +472,8 @@ elaborate st name atom = do
       coverageNames   = [ name' | Cover  name' _ _ <- rules ]
       assertionNames  = [ name' | Assert name' _ _ <- rules ]
       probeNames      = [ (n, typeOf a st2) | (n, a) <- gProbes g ]
+  -- emit warnings
+  mapM_ (\m -> putStrLn ("WARNING: " ++ m)) (reverse nts)
   if null rules
     then do
       putStrLn "ERROR: Design contains no rules.  Nothing to do."

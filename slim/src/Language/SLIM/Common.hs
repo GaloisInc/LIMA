@@ -29,16 +29,18 @@ module Language.SLIM.Common
   , mkSWEther
     -- * bus architectures
   , mkStarBus
+    -- * Common rewrites
+    -- , rewritePeriodPhase
   )
   where
 
 import Control.Monad (forM, forM_)
 import Data.Int
 import Data.Word
+import MonadLib
 import Text.Printf
 
 import Language.SLIM.Language
-
 
 -- | A Timer.
 newtype Timer = Timer { timerVar :: V Word64 }
@@ -151,29 +153,36 @@ hysteresis a b u = do
 -- Periodic clock functions ----------------------------------------------------
 
 -- | Takes a node and conditions its execution on a regular clock with given
--- start (relative to the global clock) and period.
-clocked :: Word64  -- ^ start time
-        -> Word64  -- ^ period
+-- (exact) phase and period. Note that, strictly speaking, the given phase can
+-- be larger than the period. This has the effect of delaying execution some
+-- number of extra periods.
+clocked :: Word64  -- ^ period
+        -> Word64  -- ^ phase
         -> Atom a  -- ^ node to clock
         -> Atom a
-clocked start per node = do
-    init_out <- mkInit
-    (ki, ko) <- channel "kick" Bool
-    atom "clocked" $ do
-      cond $ fullChannel ko ||. fullChannel init_out
-      _ <- readChannel ko
-      _ <- readChannel init_out
-      writeChannelWithDelay (DelayTicks per) ki (Const True)
-      node
+clocked per pha node = do
+  b <- cctxPeriodicity <$> ask
+  if b
+    then do
+      nm <- getName
+      init_out <- mkInit nm
+      (ki, ko) <- channel (nm ++ "_kick_channel") Bool
+      atom (nm ++ "_clocked") $ do
+        cond $ fullChannel ko ||. fullChannel init_out
+        _ <- readChannel ko
+        _ <- readChannel init_out
+        writeChannelWithDelay (DelayTicks per) ki (Const True)
+        atom (nm ++ "_node") node
+    else period (fromIntegral per) (phase (fromIntegral pha) node)
   where
-    mkInit :: Atom ChanOutput
-    mkInit = do
-      done <- bool "done" False
-      (ii, io) <- channel "init" Bool
+    mkInit :: Name -> Atom ChanOutput
+    mkInit nm = do
+      done <- bool (nm ++ "_init_done") False
+      (ii, io) <- channel (nm ++ "_init_channel") Bool
 
-      atom "init" $ do
+      atom (nm ++ "_init") $ do
         cond $ not_ (value done)
-        writeChannelWithDelay (DelayTicks start) ii (Const True)
+        writeChannelWithDelay (DelayTicks pha) ii (Const True)
         done <== Const True
 
       return io
@@ -304,3 +313,20 @@ mkStarBus n = do
   -- return the channel end points that are relevant to the nodes
   return [(nts_i !! i, stn_o !! i) | i <- [0..n-1]]
 
+
+-- Common Atom Rewrite Rules ---------------------------------------------------
+
+-- | Rewrite 'period' and 'phase' constraints on the atom into message passing
+--   constructions given by the 'clocked' combinator.
+{-
+rewritePeriodPhase :: Atom () -> Atom ()
+rewritePeriodPhase atm =
+  let (_, (_, (g, _))) = buildAtom emptyMap initialGlobal "" atm
+      per = fromIntegral (gPeriod g)
+      pha = case gPhase g of
+              MinPhase ph -> fromIntegral ph
+              ExactPhase ph -> fromIntegral ph
+  in if per == 1 && pha == 0
+        then atm
+        else clocked per pha atm
+-}

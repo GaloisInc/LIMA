@@ -32,12 +32,12 @@ module Language.SLIM
     ValidData, validData, getValidData, whenValid, whenInvalid,
     -- * Language & EDSL
     -- | Module: "Language.SLIM.Language"
-    Atom, atom, period, getPeriod, phase, exactPhase, getPhase, cond, cond',
-    Assign (..), incr, decr, var, var', array, array', bool, bool', int8,
-    int8', int16, int16', int32, int32', int64, int64', word8, word8', word16,
-    word16', word32, word32', word64, word64', float, float', double, double',
-    action, call, probe, probes, assert, cover, assertImply, Name,
-    path, clock, nextCoverage, rewriteAtom,
+    Atom, CompCtx(..), defCCtx, defSCtx, atom, getName, period, getPeriod,
+    phase, exactPhase, getPhase, cond, cond', Assign (..), incr, decr, var,
+    var', array, array', bool, bool', int8, int8', int16, int16', int32,
+    int32', int64, int64', word8, word8', word16, word16', word32, word32',
+    word64, word64', float, float', double, double', action, call, probe,
+    probes, assert, cover, assertImply, Name, path, clock, nextCoverage,
     -- ** channels
     channel, ChanInput (..), ChanOutput (..),
     writeChannelWithDelay, writeChannel,

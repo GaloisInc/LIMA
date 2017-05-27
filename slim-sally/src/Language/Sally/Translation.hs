@@ -26,11 +26,11 @@ import           Data.List ((\\))
 import qualified Data.Text.Lazy as T
 import           System.Exit
 
-import qualified Language.SLIM.Types as ATyp
-import qualified Language.SLIM.Channel.Types as ACTyp
 import qualified Language.SLIM.Analysis as AAna
+import qualified Language.SLIM.Channel.Types as ACTyp
 import qualified Language.SLIM.Elaboration as AEla
 import qualified Language.SLIM.Expressions as AExp
+import qualified Language.SLIM.Types as ATyp
 import qualified Language.SLIM.UeMap as AUe
 
 import           Language.Sally.Config
@@ -48,9 +48,14 @@ translaborate :: Name
               -> TrConfig
               -> AEla.Atom ()
               -> IO TrResult
-translaborate name config atom' = do
+translaborate name config atm = do
   let aname = T.unpack . textFromName $ name
-  res <- AEla.elaborate AUe.emptyMap aname atom'
+  --     -- rewrite 'period' and 'phase' constraints in terms of the 'clocked'
+  --     -- combinator
+  --     atm' = ALang.rewriteAtom ACom.rewritePeriodPhase atm
+
+  -- res <- AEla.elaborate AUe.emptyMap aname atm'
+  res <- AEla.elaborate AEla.defSCtx AUe.emptyMap aname atm
   case res of
    Nothing -> do
      putStrLn "ERROR: Design rule checks failed."

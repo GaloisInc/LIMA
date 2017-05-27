@@ -35,7 +35,10 @@ import Language.SLIM.UeMap (emptyMap)
 -- Atrributes for nodes and edges ----------------------------------------------
 
 chanAttrs :: Attributes
-chanAttrs = [color Purple, style dashed]
+chanAttrs = [color Purple, style solid]
+
+subAtomArrAttrs :: Attributes
+subAtomArrAttrs = [color Black, style dotted]
 
 atomAttrs :: Attributes
 atomAttrs = [textLabel "\\N", color Black, shape DiamondShape]
@@ -52,9 +55,10 @@ graphAtom fp atm = do
 
 mkDotGraph :: Atom () -> IO (DotGraph Text)
 mkDotGraph atm = do
-    let (_, (_u, (_g, adb))) = E.buildAtom emptyMap E.initialGlobal "top" atm
+    let ((_a, _nts), (_u, (_g, adb))) = E.buildAtom E.defCCtx emptyMap
+                                                    E.initialGlobal "top" atm
         tname = T.pack (E.atomName adb)
-    res <- E.elaborate emptyMap "top" atm
+    res <- E.elaborate E.defCCtx emptyMap "top" atm
     let rules = case res of
           Nothing -> error "ERROR: Atom failed to compile."
           Just (_, (_, r, _, _, _, _)) -> r
@@ -78,8 +82,8 @@ mkDotGraph atm = do
              node n atomAttrs
              let gps = map flatten subs
              sequence_ gps
-             forM_ subs $ \s -> do
-               n --> T.pack (E.atomName s)
+             forM_ subs $ \s ->
+               edge n (T.pack (E.atomName s)) subAtomArrAttrs
 
     addChannels cs rm = forM_ cs $ \(_cid, cinf) -> do
       let s0 = E.cinfoSrc cinf

@@ -12,8 +12,13 @@ module Language.SLIM.Language
   , module Language.SLIM.Channel.Types
   -- * Primary Language Containers
   , Atom
+  -- * Compilation parameters
+  , CompCtx (..)
+  , defCCtx
+  , defSCtx
   -- * Hierarchical Rule Declarations
   , atom
+  , getName
   , period
   , getPeriod
   , phase
@@ -69,7 +74,7 @@ module Language.SLIM.Language
   -- * Code Coverage
   , nextCoverage
   -- * Rewriting
-  , rewriteAtom
+  -- , rewriteAtom
   ) where
 
 import Data.Int
@@ -96,10 +101,19 @@ atom :: Name -> Atom a -> Atom a
 atom name design = do
   name' <- addName name
   (st1, (g1, parent)) <- get
-  let (a, (st2, (g2, child))) = buildAtom st1 g1 { gState = [] } name' design
+  ctx <- ask
+  let ((a, nts), atst) = buildAtom ctx st1 g1 { gState = [] } name' design
+      (st2, (g2, child)) = atst
   set (st2, ( g2 { gState = gState g1 ++ [StateHierarchy name $ gState g2] }
             , parent { atomSubs = atomSubs parent ++ [child] }))
+  put (reverse nts)
   return a
+
+-- | Return the top-level name of the atom.
+getName :: Atom Name
+getName = do
+  (_st, (_g, a)) <- get
+  return (atomName a)
 
 -- | Defines the period of execution of sub-rules as a factor of the base rate
 -- of the system.  Rule period is bound by the closest period assertion.  For
@@ -384,21 +398,39 @@ cover name check = do
   set (st', (g, atom' { atomCovers = (name, chk) : atomCovers atom' }))
 
 -- | Recursive bottom-up rewrite an atom.
-rewriteAtom :: (Atom () -> Atom ()) -> Atom () -> Atom ()
-rewriteAtom rw atm = rw atm'
-  where
-    atm' = do
-      _ <- atm
-      (u, (g, db)) <- get
-      let subs = atomSubs db
-      let f :: (UeMap, Global, [AtomDB]) -> AtomDB -> Atom (UeMap, Global, [AtomDB])
-          f (u0, g0, adbs) adb = do
-            let a = set (u0, (g0, adb))  -- make an atom of adb
-            let a' = rewriteAtom rw a  -- rewrite the atom using u, g
-            _ <- a'                    -- run the rewritten atom
-            (u0', (g0', adb')) <- get
-            return (u0', g0', adbs ++ [adb'])
-      (u', g', adbs') <- foldM f (u, g, []) subs
-      let db' = db { atomSubs = adbs' }
-      set (u', (g', db'))  -- update state of parent
+-- rewriteAtom :: (Atom () -> Atom ()) -> Atom () -> Atom ()
+-- rewriteAtom rw atm = rw atm'
+--   where
+--     atm' = do
+--       -- Run the atom monad's state computation, getting back the uemap,
+--       -- globals, and atom database.
+--       let (_, (u, (g, db))) = buildAtom emptyMap initialGlobal "foo" atm
+--           subs = atomSubs db
+--       -- Define a fold function that applies 'rewriteAtom' recursively
+--       -- down the subatom hierarchy, keeping an updated uemap and global
+--       -- data as it goes.
+--           f :: (UeMap, Global, [AtomDB]) -> AtomDB -> (UeMap, Global, [AtomDB])
+--           f (u0, g0, adbs) adb =
+--             let a = set (u0, (g0, adb))  -- make an atom of adb
+--                 a' = rewriteAtom rw a    -- rewrite the atom using u, g
+--                 (_, (u0', (g0', adb'))) = buildAtom u0 g0 (atomName adb) a'
+--             in trace (show u0 ++ "\n" ++ show g0 ++ "\n") (u0', g0', adbs ++ [adb'])
+--       let (u', g', adbs') = foldl' f (u, g, []) subs
+--       -- Update top-level database with the rewritten subatoms.
+--       let db' = db { atomSubs = adbs' }
+--       -- Set the state of the rewritten atom directly.
+--       set (u', (g', db'))
 
+--       -- _ <- atm
+--       -- (u, (g, db)) <- get
+--       -- let subs = atomSubs db
+--       -- let f :: (UeMap, Global, [AtomDB]) -> AtomDB -> Atom (UeMap, Global, [AtomDB])
+--       --     f (u0, g0, adbs) adb = do
+--       --       let a = set (u0, (g0, adb))  -- make an atom of adb
+--       --       let a' = rewriteAtom rw a  -- rewrite the atom using u, g
+--       --       _ <- a'                    -- run the rewritten atom
+--       --       (u0', (g0', adb')) <- get
+--       --       return (u0', g0', adbs ++ [adb'])
+--       -- (u', g', adbs') <- foldM f (u, g, []) subs
+--       -- let db' = db { atomSubs = adbs' }
+--       -- set (u', (g', db'))  -- update state of parent

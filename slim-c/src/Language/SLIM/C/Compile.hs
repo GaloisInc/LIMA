@@ -43,7 +43,7 @@ compile :: Name
 compile name config atom' = do
   -- TODO an Atom () -> Atom () rewriting step could be inserted here before
   -- elaboration
-  res <- elaborate emptyMap name atom'
+  res <- elaborate defCCtx emptyMap name atom'
   case res of
    Nothing -> putStrLn "ERROR: Design rule checks failed." >>
               exitWith (ExitFailure 1)
