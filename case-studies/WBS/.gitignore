@@ -1,6 +1,5 @@
-om1
-om1.c
-om1.h
-om1.mcmt
+wbs.c
+wbs.h
+wbs.mcmt
 cabal.project.local
 dist-newstyle

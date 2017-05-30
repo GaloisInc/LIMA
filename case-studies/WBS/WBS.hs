@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module SLIMWBS (wbs) where
+module WBS (wbs) where
 
 import Data.Int
+import Data.Word
 import qualified Data.Map.Strict as Map
 import System.FilePath.Posix
 
@@ -22,12 +23,16 @@ msgType :: Type
 msgType = Int64  -- Atom 'Type' value
 
 -- Button press processes period
-buttonPeriod :: Int
+buttonPeriod :: Word64
 buttonPeriod = 10
+buttonPhase :: Word64
+buttonPhase = 0
 
 -- COM and MON period
-procPeriod :: Int
+procPeriod :: Word64
 procPeriod = 2
+procPhase :: Word64
+procPhase = 0
 
 
 -- Single Channel Wheel Brake Example ------------------------------------------
@@ -47,7 +52,7 @@ wbs = atom "wbs" $ do
     done <== Const True
 
   -- (cin, cout) <- channel "button_chan" msgType
-  period buttonPeriod . atom "button" $ do
+  clocked buttonPeriod buttonPhase . atom "button" $ do
     count <- var "count" zero      -- button's frame count
     bs <- bool "bs" False          -- button state
     cond $ fullChannel initButtonOut
@@ -77,7 +82,7 @@ mkLane :: Bool
        -> Atom (ChanInput, ChanInput, ChanInput)
 mkLane pp = atom (pName pp "lane") $ do
 
-  let probeP nm e = probe (pName pp nm) e
+  let probeP nm = probe (pName pp nm)
 
   (btcIn, btcOut) <- channel (pName True "btc") Bool  -- button to COM
   (btmIn, btmOut) <- channel (pName True "btm") Bool  -- button to MON
@@ -97,7 +102,7 @@ mkLane pp = atom (pName pp "lane") $ do
     done <== Const True
 
   -- COM node
-  period procPeriod . atom "command" $ do
+  clocked procPeriod procPhase . atom "command" $ do
     bs         <- var "bs" False         -- observered button value
     prevbs     <- var "prevbs" False     -- previous button value
     framecount <- var "framecount" zero
@@ -132,7 +137,7 @@ mkLane pp = atom (pName pp "lane") $ do
     done <== Const True
 
   -- MON node
-  period procPeriod . atom "monitor" $ do
+  clocked procPeriod procPhase . atom "monitor" $ do
     framecount            <- var "count" zero
     bs                    <- var "bs"  False
     prevbs                <- var "prevbs" False

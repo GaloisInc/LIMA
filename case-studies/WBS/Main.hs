@@ -4,7 +4,7 @@ import Language.SLIM
 import Language.SLIM.C
 import Language.Sally
 
-import SLIMWBS (wbs)
+import WBS (wbs)
 
 main :: IO ()
 main = do
