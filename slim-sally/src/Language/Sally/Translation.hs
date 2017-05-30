@@ -455,18 +455,15 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
                     (_       , calTimeE) = (mkE *** mkE) csnms
                     (calValE', calTimeE') = (mkE' *** mkE') csnms
                     globTimeExpr = mkClockStateExpr name
-                    -- propagate the rule's enable condition to each channel
-                    -- write
+                    -- handle channel writes with explicit delay
                     messageDelay = realExpr $
                       case d of
                         ACTyp.DelayDefault -> cfgMessageDelay conf
                         ACTyp.DelayTicks t -> fromIntegral t
-                    -- timeout is current global time + message delay +
-                    -- exactly enough time (delta) to get to the receiver's
-                    -- next execution time (ala. period and phase)
-                    delE = varExpr' . stateName . mkDeltaName . uglyHack
-                         . ACTyp.chanName $ cin
-                    laterTime = addExpr (addExpr globTimeExpr messageDelay) delE
+                    -- timeout is current global time + message delay
+                    laterTime = addExpr globTimeExpr messageDelay
+                    -- propagate the rule's enable condition to each channel
+                    -- write
                     newTimeExpr = muxExpr enableExpr laterTime calTimeE
                 in SPAnd $ Seq.empty
                              |> SPEq calValE' (SEVar (lk h))  -- set chan value
@@ -644,11 +641,6 @@ mkTransitionName i name = name `scoreNames` "transition" `scoreNames`
 mkFaultChanValueName :: Name -> Name
 mkFaultChanValueName cnm =
   cnm `bangNames` "fault"
-
--- | cname --> @cname!delta@
-mkDeltaName :: Name -> Name
-mkDeltaName cnm =
-  cnm `bangNames` "delta"
 
 -- | name1 name2 --> @name1!name2@
 mkNodeName :: Name -> Name -> Name
