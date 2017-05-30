@@ -40,14 +40,20 @@ ex3 = atom "ex3" $ do
 
   atom "alice" $ clocked 2 1 $ do
     x <- int8 "x" 0
-    cond $ fullChannel bcout
-    _ <- readChannel bcout
-    incr x
     writeChannel acin true
+    decr x
+
+    atom "alice_rx" $ do
+      cond $ fullChannel bcout
+      _ <- readChannel bcout
+      incr x
 
   atom "bob" $ clocked 2 0 $ do
     x <- int8 "x" 0
-    cond $ fullChannel acout
-    _ <- readChannel acout
-    incr x
     writeChannel bcin true
+    decr x
+
+    atom "bob_rx" $ do
+      cond $ fullChannel acout
+      _ <- readChannel acout
+      incr x
