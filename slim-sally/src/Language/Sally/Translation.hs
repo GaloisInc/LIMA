@@ -50,11 +50,6 @@ translaborate :: Name
               -> IO TrResult
 translaborate name config atm = do
   let aname = T.unpack . textFromName $ name
-  --     -- rewrite 'period' and 'phase' constraints in terms of the 'clocked'
-  --     -- combinator
-  --     atm' = ALang.rewriteAtom ACom.rewritePeriodPhase atm
-
-  -- res <- AEla.elaborate AUe.emptyMap aname atm'
   res <- AEla.elaborate AEla.defSCtx AUe.emptyMap aname atm
   case res of
    Nothing -> do

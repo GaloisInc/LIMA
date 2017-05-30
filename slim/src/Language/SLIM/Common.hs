@@ -164,7 +164,9 @@ clocked per pha node = do
   b <- cctxPeriodicity <$> ask
   if b
     then do
-      nm <- getName
+      nm0 <- getName                  -- get the outer atom's name
+      let nm1 = getCompiledName node  -- get the inner atom's name
+          nm = nm0 ++ nm1
       init_out <- mkInit nm
       (ki, ko) <- channel (nm ++ "_kick_channel") Bool
       atom (nm ++ "_clocked") $ do

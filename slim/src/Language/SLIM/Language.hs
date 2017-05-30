@@ -19,6 +19,7 @@ module Language.SLIM.Language
   -- * Hierarchical Rule Declarations
   , atom
   , getName
+  , getCompiledName
   , period
   , getPeriod
   , phase
@@ -114,6 +115,15 @@ getName :: Atom Name
 getName = do
   (_st, (_g, a)) <- get
   return (atomName a)
+
+-- | Get the "most-unique" name of an atom in a non-atom context.
+getCompiledName :: Atom a -> Name
+getCompiledName atm =
+  let ((_, _nts), atst) = buildAtom defCCtx emptyMap initialGlobal "" atm
+      (_u, (_g, db)) = atst
+  in case atomSubs db of
+    [d] -> atomName d   -- unique subatom found
+    _   -> atomName db  -- no subatoms found
 
 -- | Defines the period of execution of sub-rules as a factor of the base rate
 -- of the system.  Rule period is bound by the closest period assertion.  For
