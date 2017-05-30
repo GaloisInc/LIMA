@@ -160,11 +160,11 @@ trState conf name sh rules chans = SallyState (mkStateTypeName name) vars invars
     -- TODO (Maybe Name) for prefix is a little awkward here
     go :: Maybe Name -> AEla.StateHierarchy -> [(Name, SallyBaseType)]
     go prefix (AEla.StateHierarchy nm items) =
-      concatMap (go (Just $ prefix `bangPrefix` trName nm)) items
+      concatMap (go (Just $ prefix `bangPrefix` uglyHack nm)) items
     go prefix (AEla.StateVariable nm c) =
-      [(prefix `bangPrefix` trName nm, trTypeConst c)]
+      [(prefix `bangPrefix` uglyHack nm, trTypeConst c)]
     go prefix (AEla.StateChannel nm t) =
-      let (chanVar, chanTime) = mkChanStateNames (prefix `bangPrefix` trName nm)
+      let (chanVar, chanTime) = mkChanStateNames (prefix `bangPrefix` uglyHack nm)
       in [(chanVar, trType t), (chanTime, SReal)]
     go _prefix (AEla.StateArray _ _) = error "atom-sally does not yet support arrays"
 
@@ -214,11 +214,11 @@ trInit conf name sh rules = SallyStateFormula (mkInitStateName name)
                                            else go Nothing sh
     go :: Maybe Name -> AEla.StateHierarchy -> SallyPred
     go prefix (AEla.StateHierarchy nm items) =
-      SPAnd (Seq.fromList $ map (go (Just $ prefix `bangPrefix` trName nm)) items)
+      SPAnd (Seq.fromList $ map (go (Just $ prefix `bangPrefix` uglyHack nm)) items)
     go prefix (AEla.StateVariable nm c) =
-      SPEq (varExpr' (prefix `bangPrefix` trName nm)) (trConstE c)
+      SPEq (varExpr' (prefix `bangPrefix` uglyHack nm)) (trConstE c)
     go prefix (AEla.StateChannel nm t) =
-      let (chanVar, chanTime) = mkChanStateNames (prefix `bangPrefix` trName nm)
+      let (chanVar, chanTime) = mkChanStateNames (prefix `bangPrefix` uglyHack nm)
       in SPAnd (  Seq.empty
                |> SPEq (varExpr' chanVar) (trInitForType t)
                |> SPEq (varExpr' chanTime) invalidTime)
