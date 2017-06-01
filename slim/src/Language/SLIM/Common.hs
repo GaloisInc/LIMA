@@ -34,10 +34,9 @@ module Language.SLIM.Common
   )
   where
 
-import Control.Monad (forM, forM_)
 import Data.Int
 import Data.Word
-import MonadLib
+import MonadLib     -- re-exports Control.Monad
 import Text.Printf
 
 import Language.SLIM.Language
