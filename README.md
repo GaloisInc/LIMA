@@ -1,6 +1,8 @@
 SLIM
 ====
 
+[![Build Status](https://travis-ci.org/GaloisInc/SLIM.svg?branch=master)](https://travis-ci.org/GaloisInc/SLIM)
+
 (S)pecification (L)anguage for (I)ntegrated (M)odeling
 
 Contents
