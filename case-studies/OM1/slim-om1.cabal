@@ -15,7 +15,7 @@ executable slim-om1
   default-language:    Haskell2010
   main-is:             Main.hs
   other-modules:       AtomOM1
-  build-depends:       base >= 4.8   && < 4.10
-                     , slim >= 0.1.0.0 && < 0.2
-                     , slim-c >= 0.1.0.0 && < 0.2
+  build-depends:       base       >= 4.8     && < 5
+                     , slim       >= 0.1.0.0 && < 0.2
+                     , slim-c     >= 0.1.0.0 && < 0.2
                      , slim-sally >= 0.1.0.0 && < 0.2

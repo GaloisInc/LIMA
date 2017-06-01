@@ -30,12 +30,12 @@ library
                    , Language.Sally.Types
                    , SExpPP
 
-  build-depends:       base           >=4.8 && <4.10
-                     , bytestring     >=0.10.6
-                     , containers     >=0.5
-                     , text           >=1.2
-                     , wl-pprint-text >=1.1
-                     , slim           >=0.1.0.0
+  build-depends:       base           >= 4.8     && < 5
+                     , bytestring     >= 0.10.6
+                     , containers     >= 0.5
+                     , text           >= 1.2
+                     , wl-pprint-text >= 1.1
+                     , slim           >= 0.1.0.0
                      , filepath       >= 1.4.1
 
   hs-source-dirs:      src

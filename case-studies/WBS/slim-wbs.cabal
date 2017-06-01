@@ -18,7 +18,7 @@ executable slim-wbs
   default-language:    Haskell2010
   main-is:             Main.hs
   other-modules:       WBS
-  build-depends:       base       >= 4.8     && < 4.10
+  build-depends:       base       >= 4.8     && < 5
                      , containers
                      , filepath
                      , slim       >= 0.1.0.0 && < 0.2
