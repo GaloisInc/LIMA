@@ -3,3 +3,5 @@ wbs.h
 wbs.mcmt
 cabal.project.local
 dist-newstyle
+.cabal-sandbox
+cabal.sandbox.config
