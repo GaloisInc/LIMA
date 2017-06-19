@@ -3,7 +3,21 @@ LIMA
 
 [![Build Status](https://travis-ci.org/GaloisInc/LIMA.svg?branch=master)](https://travis-ci.org/GaloisInc/LIMA)
 
-(S)pecification (L)anguage for (I)ntegrated (M)odeling
+(L)anguage for (I)ntegrated (M)odeling and (A)nalysis
+
+
+Overview
+--------
+
+LIMA is a domain specific language developed under NASA contract NNL14AA08. It
+is designed as a language for generating implementations, formal models, and
+architectural models from a common specification. In the area of
+fault-tolerant distributed systems, formal models are often produces from a
+specification using ad-hoc abstractions. These abstracts tend to cause
+implementations, and formals models to diverge. Having a common specification
+source from which we automatically generate implementation and formal model
+alleviates this.
+
 
 Contents
 --------
