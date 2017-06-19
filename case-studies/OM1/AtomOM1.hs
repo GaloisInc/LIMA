@@ -8,7 +8,7 @@
 -- Portability :  unknown
 --
 -- A specification for the distributed, fault tolerant system OM(1) written
--- using SLIM
+-- using LIMA
 --
 module AtomOM1
   ( om1
@@ -18,8 +18,8 @@ where
 import Control.Monad (forM_)
 import Data.Int
 
-import Language.SLIM
-import Language.SLIM.C (printProbe)
+import Language.LIMA
+import Language.LIMA.C (printProbe)
 import Language.Sally
 
 

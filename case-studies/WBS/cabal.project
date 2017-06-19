@@ -1,4 +1,4 @@
 packages: .
-          ../../slim/
-          ../../slim-c/
-          ../../slim-sally/
+          ../../lima/
+          ../../lima-c/
+          ../../lima-sally/

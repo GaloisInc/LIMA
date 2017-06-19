@@ -16,7 +16,7 @@ module Periodic
   )
 where
 
-import Language.SLIM
+import Language.LIMA
 import Language.Sally
 
 

@@ -1,0 +1,58 @@
+name:                lima-sally
+version:             0.1.0.0
+synopsis:            Translator from LIMA to Sally
+description:         This library is a translator that takes (distributed)
+                     Atom specifications and produces transition system models
+                     in the Sally (https://github.com/SRI-CSL/sally) input language.
+
+license:             ISC
+license-file:        LICENSE
+author:              Benjamin F Jones
+maintainer:          bjones@galois.com
+copyright:           Galois, Inc. 2016
+category:            Language
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+cabal-version:       >=1.10
+
+flag develop
+  Description: Turn off compiler optimization during development
+  Manual: True
+  Default: False
+
+library
+  exposed-modules:   Language.Sally
+                   , Language.Sally.Config
+                   , Language.Sally.Expr
+                   , Language.Sally.FaultModel
+                   , Language.Sally.PPrint
+                   , Language.Sally.Translation
+                   , Language.Sally.Types
+                   , SExpPP
+
+  build-depends:       base           >= 4.8     && < 5
+                     , bytestring     >= 0.10.6
+                     , containers     >= 0.5
+                     , text           >= 1.2
+                     , wl-pprint-text >= 1.1
+                     , lima           >= 0.1.0.0
+                     , filepath       >= 1.4.1
+
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+  ghc-options: -Wall
+  if flag(develop)
+    ghc-options: -Wall -O0
+
+test-suite atom-sally-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , lima-sally
+                     , lima        >= 1.1.0
+                     , containers  >= 0.5
+                     , filepath    >= 1.4.1
+
+  default-language:    Haskell2010

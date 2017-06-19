@@ -7,8 +7,8 @@ import Data.Word
 import qualified Data.Map.Strict as Map
 import System.FilePath.Posix
 
-import Language.SLIM
-import Language.SLIM.C
+import Language.LIMA
+import Language.LIMA.C
 import Language.Sally
 
 

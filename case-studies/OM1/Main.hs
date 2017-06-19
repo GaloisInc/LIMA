@@ -1,7 +1,7 @@
 module Main where
 
-import Language.SLIM
-import Language.SLIM.C
+import Language.LIMA
+import Language.LIMA.C
 import Language.Sally
 
 import AtomOM1 (om1)
