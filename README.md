@@ -57,3 +57,11 @@ output, e.g.
 Linking /Users/alice/lima/case-studies/OM1/dist-newstyle/build/lima-om1-0.2.0.0/build/lima-om1/lima-om1
 ```
 
+Thanks
+------
+
+Much of the original code base for this project is due to
+[Tom Hawkins](https://github.com/tomahawkins/atom) and
+[Lee Pike](https://www.cs.indiana.edu/~lepike/).
+The LIMA logo was generously designed by
+[Getty Ritter](https://github.com/aisamanra).
