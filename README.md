@@ -1,4 +1,4 @@
-![LIMA logo](lima.svg)
+![LIMA logo](https://cdn.rawgit.com/GaloisInc/LIMA/4ad3bf21/lima.svg)
 
 LIMA
 ====
