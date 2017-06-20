@@ -1,3 +1,5 @@
+![LIMA logo](lima.svg)
+
 LIMA
 ====
 
