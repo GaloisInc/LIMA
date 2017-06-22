@@ -1,0 +1,3 @@
+[submodule "dependencies/language-sally"]
+	path = dependencies/language-sally
+	url = https://github.com/galoisinc/language-sally

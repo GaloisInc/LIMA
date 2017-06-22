@@ -238,7 +238,7 @@ atomWithSWEther = atom "atomLayered" $ do
     atom "sender" $ do
       done <- bool "done" False
       cond $ not_ (value done)
-      writeChannel nodeAToE (1 :: E Typ)
+      writeChannel nodeAToE (1 :: E MsgType)
       done <== true
 
     atom "receiver" $ do

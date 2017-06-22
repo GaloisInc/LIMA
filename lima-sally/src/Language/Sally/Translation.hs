@@ -23,7 +23,7 @@ import           Data.Maybe (mapMaybe, fromMaybe)
 import           Data.Sequence ((><), (|>))
 import qualified Data.Sequence as Seq
 import           Data.List ((\\))
-import qualified Data.Text.Lazy as T
+import qualified Data.Text as T
 import           System.Exit
 
 import qualified Language.LIMA.Analysis as AAna
@@ -34,8 +34,10 @@ import qualified Language.LIMA.Types as ATyp
 import qualified Language.LIMA.UeMap as AUe
 
 import           Language.Sally.Config
-import           Language.Sally.Expr
 import           Language.Sally.FaultModel
+
+-- from language-sally package
+import           Language.Sally.Expr
 import           Language.Sally.PPrint (spPrint)
 import           Language.Sally.Types
 
