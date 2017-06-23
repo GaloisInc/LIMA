@@ -35,6 +35,7 @@ module Language.LIMA.Common
   where
 
 import Data.Int
+import Data.Maybe (mapMaybe)
 import Data.Word
 import MonadLib     -- re-exports Control.Monad
 import Text.Printf
@@ -195,6 +196,9 @@ typ :: Type
 typ = Int64
 type Typ = Int64
 
+typDef :: Typ
+typDef = 0
+
 -- | Instantiate a switched, broadcasting ethernet network. The outputs are a
 -- channel input/output for each node.
 --
@@ -220,53 +224,68 @@ mkSWEther :: Int   -- ^ number of nodes on each side of the network
           -> Atom [(ChanInput, ChanOutput)]
           -- ^ n-(input, output) pairs to connect to nodes on left/right sides
 mkSWEther n m = do
-  let mkEndChans nm = unzip <$> mapM (flip channel typ) [nm ++ show i | i <- [0..n-1]]
+  let bar i = [ l | l <- [0..n-1], l /= i ] :: [Int]
+      rn    = [0..n-1] :: [Int]
+      rm    = [0..m-1] :: [Int]
+  let mkEndChans nm = unzip <$> mapM (`channel` typ) [nm ++ show i | i <- rn]
   (nte_i, nte_o) <- mkEndChans "node_to_end_"
   (etn_i, etn_o) <- mkEndChans "end_to_node_"
   let res = zip nte_i etn_o  -- nte_o and etn_i are internal to the network
 
-  -- generate the internal channels: [ [ (chan_into_net, chan_out_net) ] ]
-  internalChans <- forM [0..m-1] $ \j ->       -- loop over switches
-                     forM [0..n-1] $ \i -> do  -- loop over endpoints
-                       c1 <- channel (printf "e%d_to_sw%d" i j) typ
-                       c2 <- channel (printf "sw%d_to_e%d" j i) typ
-                       return (c1, c2)
-  let getIncoming cs = map (snd . fst) cs ++ map (snd . snd) cs
-  let getOutgoing cs = map (fst . fst) cs ++ map (fst . snd) cs
+  -- generate the internal channels: [ [ (in_k_j, [out_1, ...]) ] ]
+  -- where in_k_j goes from endpoint j to switch k and out_1 .. out_{n-1} go
+  -- from switch k to the other endpoints (but not the j-th.
+  internalChans <-
+    forM rm $ \k ->       -- loop over switches
+      forM rn $ \j -> do  -- loop over endpoints
+        in_k_j <- channel (printf "in_s%d_e%d" k j) typ
+        let mkOChan i = do c <- channel (printf "out_s%v_e%v_e%v" k j i) typ
+                           return (i,c)
+        outs <- mapM mkOChan (bar j)
+        return (in_k_j, outs)
 
-  -- generate the switches
-  forM_ [0..m-1] $ \j ->
-    atom (printf "sw%d" j) $ do
-      -- listen on each incoming chan and broadcast to all outgoing chans
-      let myChans = internalChans !! j  -- :: [ (chan_into_net, chan_out_net) ]
-      let myIncoming = getIncoming myChans
-      let myOutgoing = getOutgoing myChans
-      forM (zip myIncoming [0..]) $ \(cout, k) ->
-        atom (printf "handler%d" (k :: Int)) $ do
-          cond $ fullChannel cout
-          v <- readChannel cout
-          mapM_ (flip writeChannel (v :: E Typ)) myOutgoing
+  -- generate the switches:
+  -- each one listes on each incoming chan and broadcast to all outgoing chans
+  forM_ rm $ \k ->
+    atom (printf "sw%v" k) $ do
+      let myChans = internalChans !! k  -- :: [ (in_k_j, outs) ]_j
+      forM_ rn $ \j -> do
+        let (myIn, myOuts) = myChans !! j
+        atom (printf "handler_%v_%v" k j) $ do
+          cond $ fullChannel (snd myIn)
+          v <- readChannel (snd myIn)
+          mapM_ ((`writeChannel` (v :: E Typ)) . fst . snd) myOuts
 
   -- generate the endpoints
-  forM_ [0..n-1] $ \i -> do
-    let myChans = map (!! i) internalChans  -- :: [ (chan_into_net, chan_out_net) ]
-    let myIncoming = getIncoming myChans
-    let myOutgoing = getOutgoing myChans
-    let myNodeCout = nte_o !! i
-    atom ("endpoint_to_net" ++ show i) $ do
+  forM_ rn $ \j -> do
+    let myOuts = map (fst . (!! j)) internalChans
+    let myNodeCout = nte_o !! j
+    atom ("endpoint_to_net" ++ show j) $ do
       -- listen on special endpoint channel and broadcast
       cond $ fullChannel myNodeCout
       v <- readChannel myNodeCout
-      mapM_ (flip writeChannel (v :: E Typ)) myOutgoing  -- broadcast
+      mapM_ ((`writeChannel` (v :: E Typ)) . fst) myOuts  -- broadcast
 
     -- listen to all switches and write any receives to special node channel
     -- input
-    forM_ [0..m-1] $ \j -> do
-      let swOutput = myIncoming !! j
-      atom ("endpoint_from_net" ++ show i) $ do
-        cond $ fullChannel swOutput
-        v <- readChannel swOutput
-        writeChannel (etn_i !! j) (v :: E Typ)
+    -- Note: This has to buffered somehow
+    buffer <- var (printf "buffer_%v" j) typDef
+    ready  <- bool (printf "ready_%v" j) False
+    let myIns = concatMap (mapMaybe (\(_, allouts) -> lookup j allouts))
+                          internalChans
+    forM_ (zip [0..] myIns) $ \(l, cl) ->
+      atom (printf "endpoint_from_net_f%v_to_e%v" (l :: Int) j) $ do
+        cond $ fullChannel (snd cl)
+        v <- readChannel (snd cl)
+        -- writeChannel (etn_i !! j) (v :: E Typ)
+        buffer <== v
+        ready  <== true
+
+    -- write out the buffer
+    atom (printf "endpoint_from_net_writer_e%v" j) $ do
+      cond (value ready)
+      writeChannel (etn_i !! j) (value buffer)
+      ready <== false
 
   return res
 
@@ -294,7 +313,7 @@ mkStarBus :: Int  -- ^ number of nodes on the bus
           -- communicate to the bus with
 mkStarBus n = do
   -- make channels from nodes to star
-  let mkChans nm = unzip <$> mapM (flip channel typ) [nm ++ show i | i <- [0..n-1]]
+  let mkChans nm = unzip <$> mapM (`channel` typ) [nm ++ show i | i <- [0..n-1]]
   (nts_i, nts_o) <- mkChans "inward"  -- "nts" = "node to star"
 
   -- make channels from star to nodes
@@ -303,31 +322,24 @@ mkStarBus n = do
   -- make the star node: listens to all incoming channels,
   -- on reciept it broadcasts to all outgoing channels.
   atom "star" $
-    forM_ [0..n-1] $ \i ->
-      let c = nts_o !! i in
-      atom ("listen_inward_" ++ show i) $ do
-        cond $ fullChannel c
-        m' <- readChannel c
-        -- send messages to all the other nodes attached to the bus
-        mapM_ (flip writeChannel (m' :: E Typ)) [ stn_i !! j | j <- [0..n-1], i /= j ]
+    forM_ [0..n-1] $ \i -> do
+      -- buffer writes to stn_i
+      buffer <- var (printf "buffer_%v" i) typDef
+      ready  <- bool (printf "ready_%v" i) False
+      let c = nts_o !! i
+      -- listen for incoming from other notes than the i-th
+      forM_ [ j | j <- [0..n-1], i /= j ] $ \j ->
+        atom (printf "listen_inward_%v_%v" i j) $ do
+          cond $ fullChannel c
+          m' <- readChannel c
+          -- buffer messages to all the other nodes attached to the bus
+          buffer <== m'
+          ready  <== true
+      -- write out the buffers when they're ready
+      atom (printf "writer_%v" i) $ do
+        cond (value ready)
+        writeChannel (stn_i !! i) (value buffer)
+        ready <== false
 
   -- return the channel end points that are relevant to the nodes
   return [(nts_i !! i, stn_o !! i) | i <- [0..n-1]]
-
-
--- Common Atom Rewrite Rules ---------------------------------------------------
-
--- | Rewrite 'period' and 'phase' constraints on the atom into message passing
---   constructions given by the 'clocked' combinator.
-{-
-rewritePeriodPhase :: Atom () -> Atom ()
-rewritePeriodPhase atm =
-  let (_, (_, (g, _))) = buildAtom emptyMap initialGlobal "" atm
-      per = fromIntegral (gPeriod g)
-      pha = case gPhase g of
-              MinPhase ph -> fromIntegral ph
-              ExactPhase ph -> fromIntegral ph
-  in if per == 1 && pha == 0
-        then atm
-        else clocked per pha atm
--}
