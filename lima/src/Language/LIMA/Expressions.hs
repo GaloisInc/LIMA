@@ -239,7 +239,7 @@ data E a where
   Atanh    :: FloatingE a => E a -> E a
 
 instance Show (E a) where
-  show _ = error "Show (E a) not implemented"
+  show _ = "Show (E a) ???"
 
 instance Expr a => Eq (E a) where
   (==) = (==) `on` ue
