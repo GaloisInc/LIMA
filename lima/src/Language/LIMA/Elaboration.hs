@@ -152,12 +152,14 @@ data Rule
     Assert
     { ruleName      :: Name
     , ruleEnable    :: Hash
+    , ruleEnableNH  :: Hash
     , ruleAssert    :: Hash
     }
   | -- | A coverage statement
     Cover
     { ruleName      :: Name
     , ruleEnable    :: Hash
+    , ruleEnableNH  :: Hash
     , ruleCover     :: Hash
     }
 
@@ -251,18 +253,22 @@ elaborateRules parentEnable atom =
     assert :: (Name, Hash) -> UeState Rule
     assert (name, u) = do
       h <- enable
+      h' <- enableNH
       return Assert
         { ruleName      = name
         , ruleEnable    = h
+        , ruleEnableNH  = h'
         , ruleAssert    = u
         }
 
     cover :: (Name, Hash) -> UeState Rule
     cover (name, u) = do
       h <- enable
+      h' <- enableNH
       return Cover
         { ruleName      = name
         , ruleEnable    = h
+        , ruleEnableNH  = h'
         , ruleCover     = u
         }
 
@@ -336,8 +342,9 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
                             , cinfoValueExpr = Nothing
                             }
                         )
-          in Map.fromList (map fwrite (ruleChanWrite r)
-                           ++ map fread (ruleChanRead r))
+              m = Map.fromList (map fwrite (ruleChanWrite r)
+                             ++ map fread (ruleChanRead r))
+          in m
         getChannels' _ = Map.empty  -- asserts and coverage statements have no channels
 
         -- Merge two channel info records, in particular this unions the
@@ -347,17 +354,17 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
           if (cinfoId c1 == cinfoId c2) &&      -- check invariant
              (cinfoName c1 == cinfoName c2) &&
              (cinfoType c1 == cinfoType c2) &&
-             ((cinfoValueExpr c1 == cinfoValueExpr c2) ||  -- either equal or
-              (isNothing (cinfoValueExpr c1)) ||           -- one is a Nothing
-              (isNothing (cinfoValueExpr c2)))
-             then c1 -- { cinfoSrc = cinfoSrc c1 `union` cinfoSrc c2
-                     -- , cinfoRecv = cinfoRecv c1 `union` cinfoRecv c2
-                     { cinfoSrc = muxMaybe (cinfoSrc c1) (cinfoSrc c2)
+             (cinfoValueExpr c1 == cinfoValueExpr c2 ||  -- either equal or
+               isNothing (cinfoValueExpr c1) ||            -- one is a Nothing
+               isNothing (cinfoValueExpr c2))
+             then c1 { cinfoSrc = muxMaybe (cinfoSrc c1) (cinfoSrc c2)
                      , cinfoRecv = muxMaybe (cinfoRecv c1) (cinfoRecv c2)
                      , cinfoValueExpr = muxMaybe (cinfoValueExpr c1)
                                                  (cinfoValueExpr c2)
                      }
-             else error "Elaboration: getChannels: mismatch occured"
+             else error $ "Elaboration: getChannels: mismatch occured"
+                       ++ "\n" ++ show c1
+                       ++ "\n" ++ show c2
 
 -- | Evaluate the computation carried by the given atom and return an 'AtomDB'
 --   value, the intermediate representation for atoms at this level.
@@ -469,8 +476,8 @@ elaborate ctx st name atom = do
       rules           = reIdRules 0 (reverse getRules)
       -- channel source and dest are numbered based on 'ruleId's in 'rules'
       channels        = Map.elems (getChannels rules)
-      coverageNames   = [ name' | Cover  name' _ _ <- rules ]
-      assertionNames  = [ name' | Assert name' _ _ <- rules ]
+      coverageNames   = [ name' | Cover  name' _ _ _ <- rules ]
+      assertionNames  = [ name' | Assert name' _ _ _ <- rules ]
       probeNames      = [ (n, typeOf a st2) | (n, a) <- gProbes g ]
   -- emit warnings
   mapM_ (\m -> putStrLn ("WARNING: " ++ m)) (reverse nts)
@@ -627,8 +634,8 @@ allUEs rule = ruleEnable rule : ruleEnableNH rule : ues
          concat [ ue' : index uv' | (uv', ue') <- ruleAssigns rule ]
       ++ concatMap snd (ruleActions rule)
       ++ map (\(_, h, _) -> h) (ruleChanWrite rule)
-    Assert _ _ a       -> [a]
-    Cover  _ _ a       -> [a]
+    Assert _ _ _ a       -> [a]
+    Cover  _ _ _ a       -> [a]
 
 -- | Left biased combination of maybe values. `muxMaybe` has the property that
 -- if one of the two inputs is a `Just`, then the output will also be.

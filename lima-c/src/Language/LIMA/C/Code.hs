@@ -612,15 +612,15 @@ codeAssertionChecks mp config assertNames coverNames rules =
   concat [     "  if (" ++ id' enable ++ ") " ++ cAssertName config
             ++ "(" ++ assertionId name ++ ", " ++ id' check ++ ", "
             ++ globalClk ++ ");\n"
-          | Assert name enable check <- rules ] ++
+          | Assert name enable _ check <- rules ] ++
   concat [     "  if (" ++ id' enable ++ ") " ++ cCoverName  config
             ++ "(" ++ coverageId  name ++ ", " ++ id' check ++ ", "
             ++ globalClk ++ ");\n"
-          | Cover  name enable check <- rules ] ++
+          | Cover  name enable _ check <- rules ] ++
   "}\n\n"
   where
-  ues = map (second showTopo) . topo mp $ concat [ [a, b] | Assert _ a b <- rules ]
-                                       ++ concat [ [a, b] | Cover _ a b <- rules ]
+  ues = map (second showTopo) . topo mp $ concat [ [a, a', b] | Assert _ a a' b <- rules ]
+                                       ++ concat [ [a, a', b] | Cover _ a a' b <- rules ]
   id' ue' = fromJust $ lookup ue' ues
   assertionId :: Name -> String
   assertionId name = show $ fromJust $ elemIndex name assertNames
