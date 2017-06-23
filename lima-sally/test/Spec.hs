@@ -219,6 +219,39 @@ atom6 = atom "atom6" $ do
     cond (value c)
     c <== false
 
+-- | Test use of assertions. In C code they produce assertions. In Sally
+-- models they produce safety property queries.
+atom7 :: Atom ()
+atom7 = atom "atom7" $ do
+  x <- int8  "x" 0
+  cond $ value x <. 10
+  x <== value x + 1
+  assert "x nonnegative" (value x >=. 0)
+
+-- | Test use of assertions with sub-atoms.
+atom8 :: Atom ()
+atom8 = atom "atom8" $ do
+  x <- int8  "x" 0
+  cond $ value x <. 10
+  incr x
+  assert "x nonnegative" (value x >=. 0)
+
+  atom "sub_atom8" $ do
+    y <- int8 "y" 0
+    incr y
+    assert "y nonnegative" (value y >=. 0)
+
+-- | Test some aspects of generated calendar framework in the presence of
+-- multiple channels.
+atom9 :: Atom ()
+atom9 = atom "atom9" $ do
+  (tx1, rx1) <- channel "chan1" Bool
+  (tx2, rx2) <- channel "chan2" Bool
+  (tx3, rx3) <- channel "chan3" Bool
+  writeChannel tx1 true
+  writeChannel tx2 true
+  writeChannel tx3 true
+
 -- Examples of Layerd Atoms --------------------------------------------------
 
 -- | A simple system A --> B where the link inbetween is realized as a
@@ -229,7 +262,7 @@ atomWithSWEther = atom "atomLayered" $ do
   -- declare the switched ethernet fabric for 2 nodes with 2 internal switches
   chans <- mkSWEther 2 2
   let (nodeAToE, eToNodeA) = chans !! 0  :: (ChanInput, ChanOutput)
-  let (_       , eToNodeB) = chans !! 1  :: (ChanInput, ChanOutput)
+  let (nodeBToE, eToNodeB) = chans !! 1  :: (ChanInput, ChanOutput)
 
   -- node A
   atom "node_A" $ do
@@ -253,6 +286,10 @@ atomWithSWEther = atom "atomLayered" $ do
     cond $ fullChannel eToNodeB
     v <- readChannel eToNodeB
     msg <== v
+    -- pretend to send messages from B
+    atom "dummy_subnode_B" $ do
+      cond (v ==. Const 42)
+      writeChannel nodeBToE (0 :: E MsgType)
 
 -- | A simple system of three nodes connected to a bus.
 atomWithBus :: Atom ()
@@ -291,18 +328,18 @@ atomWithBus = atom "atomBus" $ do
         atom "broadcaster" $ do
           cond $ value counter >. per
           counter <== zero
-          writeChannel cin ident
+          writeChannel cin (Const ident)
 
   -- create nodes with different parameters using the mkNode function
-  mkNode one   two   (fst csA) (snd csA)    -- node 1, period 2
-  mkNode two   three (fst csB) (snd csB)    -- node 2, period 3
-  mkNode three one   (fst csC) (snd csC)    -- node 3, period 1
+  mkNode (1 :: Int64) two   (fst csA) (snd csA)    -- node 1, period 2
+  mkNode (2 :: Int64) three (fst csB) (snd csB)    -- node 2, period 3
+  mkNode (3 :: Int64) one   (fst csC) (snd csC)    -- node 3, period 1
 
   -- kickstart the system by putting a message on the bus as node C
-  done <- bool "done" False
-  cond $ not_ (value done)
-  done <== true
-  writeChannel (fst csC) three
+  -- done <- bool "done" False
+  -- cond $ not_ (value done)
+  -- done <== true
+  -- writeChannel (fst csC) three
 
 
 -- Configurations --------------------------------------------------------------
@@ -357,22 +394,26 @@ suite =
     -- fewer state vars & different property
   , ("A3min", atom3min, defSpecCfg,
         unlines [ "(query A3min_transition_system"
-                , "    (=> (not (= A3min!atom3!bob!msg (-1))) (>= A3min!__t 1)))"])
+                , "    (=> (not (= A3min!atom3!bob!msg (-1))) (>= A3min!__global_clock 1)))"])
     -- receiver has a long period
   , ("A3per", atom3Per, defSpecCfg,
         unlines [ "(query A3per_transition_system"
-                , "  (<= 0 A3per!__t))"
+                , "  (<= 0 A3per!__global_clock))"
                 , ""
                 , "(query A3per_transition_system"
-                , "    (=> (not (= A3per!atom3Per!bob!msg (-1))) (>= A3per!__t 1)))"])
+                , "    (=> (not (= A3per!atom3Per!bob!msg (-1))) (>= A3per!__global_clock 1)))"])
   , ("A4", atom4, defSpecCfg,
         unlines [ "(query A4_transition_system"
                 , "    (=> A4!atom4!nodeC!done (= A4!atom4!nodeC!msg 1)))"
                 , "\n\n"
                 , "(query A4_transition_system"
-                , "    (=> A4!atom4!nodeC!done (= A4!__t 2)))"])
-  , ("A5", atom5, defSpecCfg, "")
-  , ("A6", atom5, defSpecCfg, "")
+                , "    (=> A4!atom4!nodeC!done (= A4!__global_clock 2)))"])
+  -- A5 uses 'clock' which isn't yet fully supported
+  -- , ("A5", atom5, defSpecCfg, "")
+  , ("A6", atom6, defSpecCfg, "")
+  , ("A7", atom7, defSpecCfg, "")
+  , ("A8", atom8, defSpecCfg, "")
+  , ("A9", atom9, defSpecCfg, "")
   , ("ASWEther", atomWithSWEther, defSpecCfg, "")
   , ("ABus", atomWithBus, defSpecCfg, "")
   ]
