@@ -435,8 +435,8 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
              then -- let m = minExpr calTimes (Just invalidTime)
                   let m = mkCalMinTimeExpr stateName name
                   in SPAnd $ (Seq.empty
-                               |> SPLt (mkClockStateExpr  name) m
-                               |> SPEq (mkClockStateExpr' name) m
+                               |> SPLt (mkClockExpr stateName name) m
+                               |> SPEq (mkClockExpr nextName name) m
                                |> (if cfgDebug conf  -- mark a clock transition
                                      then SPEq lastTransE' clockLastTrans
                                      else SPConst True))
@@ -509,7 +509,7 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
                     -- current and next variables for calendar entries
                     (_       , calTimeE) = (mkE *** mkE) csnms
                     (calValE', calTimeE') = (mkE' *** mkE') csnms
-                    globTimeExpr = mkClockStateExpr name
+                    globTimeExpr = mkClockExpr stateName name
                     -- handle channel writes with explicit delay
                     messageDelay = realExpr $
                       case d of
@@ -567,7 +567,7 @@ trUExpr nt name umap chans ues h =
     AUe.MUVRef (AUe.MUVArray _ _)  -> aLangErr "arrays"
     AUe.MUVRef (AUe.MUVExtern k _) -> varExpr' . nt . uglyHack $ k
     AUe.MUVRef (AUe.MUVChannel _ k _)    -> mkFaultCheck name chans k
-    AUe.MUVRef (AUe.MUVChannelReady _ k) -> mkTimeCheck name k
+    AUe.MUVRef (AUe.MUVChannelReady _ k) -> mkTimeCheck nt name k
     AUe.MUCast _ _     -> aLangErr "casting"
     AUe.MUConst x      -> SELit (trConst x)
     AUe.MUAdd _ _      -> addExpr a b
@@ -640,11 +640,12 @@ mkFaultCheck name chans nm = muxExpr checkFault calVal faultVal
 
 -- | Construct a predicate that checks the given time for equality with the
 -- global time.
-mkTimeCheck :: Name       -- ^ Atom name
+mkTimeCheck :: (Name -> Name)  -- ^ name transformer
+            -> Name       -- ^ Atom name
             -> ATyp.Name  -- ^ Channel name
             -> SallyExpr
-mkTimeCheck anm cnm = SEPre $ SPEq chanTime (mkClockStateExpr anm)
-  where chanTime   = varExpr' . stateName . snd . mkChanStateNames . uglyHack $ cnm
+mkTimeCheck nt anm cnm = SEPre $ SPEq chanTime (mkClockExpr nt anm)
+  where chanTime   = varExpr' . nt . snd . mkChanStateNames . uglyHack $ cnm
 
 -- Calendar Automata Parameters ------------------------------------------------
 
@@ -742,12 +743,8 @@ mkCalMinTimeFormulaName :: Name -> Name
 mkCalMinTimeFormulaName = (`scoreNames` "calendar_min_time")
 
 -- | clock state (with state namespace)
-mkClockStateExpr :: Name -> SallyExpr
-mkClockStateExpr = varExpr' . stateName . mkClockTimeName
-
--- | next clock state
-mkClockStateExpr' :: Name -> SallyExpr
-mkClockStateExpr' = varExpr' . nextName . mkClockTimeName
+mkClockExpr :: (Name -> Name) -> Name -> SallyExpr
+mkClockExpr nt = varExpr' . nt . mkClockTimeName
 
 -- | calendar min time expression
 mkCalMinTimeExpr :: (Name -> Name) -> Name -> SallyExpr
