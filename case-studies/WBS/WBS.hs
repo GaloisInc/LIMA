@@ -177,6 +177,7 @@ mkLane pp = atom (pName pp "lane") $ do
         mux (value mautoMode /=. value xSideAutoMode)
             (Const one + value agreementFailureCount)
             (Const zero)
+      assert "my assert" (value agreementFailureCount <=. Const three)
       -- cond $ value mautoMode /=. value xSideAutoMode
       -- incr agreementFailureCount
 
@@ -197,18 +198,15 @@ mkLane pp = atom (pName pp "lane") $ do
 
     atom "wait_for_button_frame" $ do
      cond $ fullChannel btoOut
-     v <- readChannel btoOut
-     bcount <== v
+     incr bcount
 
     atom "wait_for_com_frame" $ do
      cond $ fullChannel ctoOut
-     v <- readChannel ctoOut
-     ccount <== v
+     incr ccount
 
     atom "wait_for_mon_frame" $ do
      cond $ fullChannel mtoOut
-     v <- readChannel mtoOut
-     mcount <== v
+     incr mcount
 
   -- return input channels for use by the button
   return (btcIn, btmIn, btoIn)

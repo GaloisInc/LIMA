@@ -5,3 +5,4 @@ cabal.project.local
 dist-newstyle
 .cabal-sandbox
 cabal.sandbox.config
+wbs
