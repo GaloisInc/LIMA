@@ -40,22 +40,18 @@ procPhase = 0
 wbs :: Atom ()
 wbs = atom "wbs" $ do
 
+  -- cross channel comms
+  (mhtomlIn, mhtomlOut) <- channel "mon_high_to_low" Bool
+  (mltomhIn, mltomhOut) <- channel "mon_low_to_high" Bool
+
   -- Declare two lanes
-  laneIns <- mapM mkLane [True, False]  -- high/low priority
+  laneIns <- mapM mkLane [ (True, mhtomlIn, mltomhOut)
+                         , (False, mltomhIn, mhtomlOut)
+                         ]  -- high/low priority
 
-  -- self loop to initialize button
-  (initButtonIn, initButtonOut) <- channel "initButton" Bool
-  atom "initTheButton" $ do
-    done <- bool "done" False
-    cond $ not_ (value done)
-    writeChannel initButtonIn (Const True)
-    done <== Const True
-
-  -- (cin, cout) <- channel "button_chan" msgType
   clocked buttonPeriod buttonPhase . atom "button" $ do
     count <- var "count" zero      -- button's frame count
     bs <- bool "bs" False          -- button state
-    cond $ fullChannel initButtonOut
 
     probe "boolbutton.count" (value count)
     bs <== mux (value bs ==. Const True) (Const False) (Const True)
@@ -68,46 +64,41 @@ wbs = atom "wbs" $ do
 
     incr count
 
-    writeChannel initButtonIn (Const True)  -- value doesn't matter
-
   printAllProbes
 
 
 -- Command / Monitor "Lane" --------------------------------------------
 
-pName :: Bool -> String -> String
-pName b nm = nm ++ if b then "_high" else "_low"
-
-mkLane :: Bool
+-- | A lane consists of a command node, a monitor node, and an observer.
+--
+--   Input is a triple of: flag to indicate "high" lane or "low" lane, chan
+--   input to write control messages on for the other mon, and chan output to
+--   listen for control messaages on from the other mon.
+--
+--   Return includes (in order) a chan input that goes to the COM (Bool),
+--   one that goes to the MON (Bool), and one that goes to the observer
+--   (Int64).
+mkLane :: (Bool, ChanInput, ChanOutput)
        -> Atom (ChanInput, ChanInput, ChanInput)
-mkLane pp = atom (pName pp "lane") $ do
+mkLane (pp, mtmIn, mtmOut) = atom (pName pp "lane") $ do
 
   let probeP nm = probe (pName pp nm)
 
-  (btcIn, btcOut) <- channel (pName True "btc") Bool  -- button to COM
-  (btmIn, btmOut) <- channel (pName True "btm") Bool  -- button to MON
-  (btoIn, btoOut) <- channel (pName True "bto") Bool  -- button to OBS
+  (btcIn, btcOut) <- channel (pName pp "btc") Bool   -- button to COM
+  (btmIn, btmOut) <- channel (pName pp "btm") Bool   -- button to MON
+  (btoIn, btoOut) <- channel (pName pp "bto") Int64  -- button to OBS
 
-  -- com to mon state exchange
-  (ctmIn, ctmOut) <- channel "ctm" Bool
-  (ctoIn, ctoOut) <- channel "cto" Int64
-  (mtoIn, mtoOut) <- channel "mto" Int64
-
-  -- self loop to initialize button
-  (initCOMIn, initCOMOut) <- channel "initCOM" Bool
-  atom "initTheCOM" $ do
-    done <- bool "done" False
-    cond $ not_ (value done)
-    writeChannel initCOMIn (Const True)
-    done <== Const True
+  -- com to mon and observer state exchange
+  (ctmIn, ctmOut) <- channel (pName pp "ctm") Bool   -- send state
+  (ctoIn, ctoOut) <- channel (pName pp "cto") Int64  -- send frame count
+  (mtoIn, mtoOut) <- channel (pName pp "mto") Int64  -- send frame count
 
   -- COM node
-  clocked procPeriod procPhase . atom "command" $ do
+  clocked procPeriod procPhase . atom (pName pp "command") $ do
     bs         <- var "bs" False         -- observered button value
     prevbs     <- var "prevbs" False     -- previous button value
     framecount <- var "framecount" zero
     cautoMode  <- var "cautoMode" False
-    cond $ fullChannel initCOMOut
 
     incr framecount
     prevbs <== value bs
@@ -119,7 +110,6 @@ mkLane pp = atom (pName pp "lane") $ do
     writeChannel ctoIn (value framecount)  -- send 'framecount' to observer
     writeChannel ctmIn (value cautoMode)   -- send 'cautoMode' to MON
 
-    writeChannel initCOMIn (Const True)     -- kick self
     probeP "command.autoMode" (value cautoMode)
 
     atom "wait_for_button_press" $ do
@@ -128,16 +118,8 @@ mkLane pp = atom (pName pp "lane") $ do
       bs <== v
       probeP "command.button_pressed" (value bs)
 
-  -- self loop to initialize monitor
-  (initMONIn, initMONOut) <- channel "initMON" Bool
-  atom "initTheMON" $ do
-    done <- bool "done" False
-    cond $ not_ (value done)
-    writeChannel initMONIn (Const True)
-    done <== Const True
-
   -- MON node
-  clocked procPeriod procPhase . atom "monitor" $ do
+  clocked procPeriod procPhase . atom (pName pp "monitor") $ do
     framecount            <- var "count" zero
     bs                    <- var "bs"  False
     prevbs                <- var "prevbs" False
@@ -145,7 +127,8 @@ mkLane pp = atom (pName pp "lane") $ do
     xSideAutoMode         <- var "autoMode" False
     agreementFailureCount <- var "agreementFailureCount" zero
     agreementFailure      <- var "agreementFailure" False
-    cond $ fullChannel initMONOut
+    control               <- var "control" pp
+    otherControl          <- var "otherControl" False
 
     incr framecount
     prevbs <== value bs
@@ -155,7 +138,6 @@ mkLane pp = atom (pName pp "lane") $ do
                       (not_ (value mautoMode))
                       (value mautoMode)
     writeChannel mtoIn (value framecount)  -- send 'framecount' to observer
-    writeChannel initCOMIn (Const True)   -- kick self
     probeP "monitor.autoMode" (value mautoMode)
     probeP "monitor.agreementFailureCount" (value agreementFailureCount)
     probeP "monitor.agreementFailure" (value agreementFailure)
@@ -177,18 +159,24 @@ mkLane pp = atom (pName pp "lane") $ do
         mux (value mautoMode /=. value xSideAutoMode)
             (Const one + value agreementFailureCount)
             (Const zero)
-      assert "my assert" (value agreementFailureCount <=. Const three)
-      -- cond $ value mautoMode /=. value xSideAutoMode
-      -- incr agreementFailureCount
+      assert (pName pp "my assert") (value agreementFailureCount <=. Const three)
 
     atom "mon_agreement_count" $ do
       cond $ value agreementFailureCount ==. Const three
       agreementFailure <== Const True
+      control <== false
+      writeChannel mtmIn (value control)
 
+    -- read values of "control" from the other mon, indicating whether that
+    -- mon thinks it is in control or not
+    atom "mon_other_control" $ do
+      cond $ fullChannel mtmOut
+      v <- readChannel mtmOut
+      otherControl <== v
 
   -- | Internal Observer Node - run every tick and read values from the
   -- observer channels
-  atom "observer" $ do
+  atom (pName pp "observer") $ do
     bcount <- var "bcount" zero
     ccount <- var "ccount" zero
     mcount <- var "mcount" zero
@@ -198,14 +186,17 @@ mkLane pp = atom (pName pp "lane") $ do
 
     atom "wait_for_button_frame" $ do
      cond $ fullChannel btoOut
+     _ <- readChannel btoOut
      incr bcount
 
     atom "wait_for_com_frame" $ do
      cond $ fullChannel ctoOut
+     _ <- readChannel ctoOut
      incr ccount
 
     atom "wait_for_mon_frame" $ do
      cond $ fullChannel mtoOut
+     _ <- readChannel mtoOut
      incr mcount
 
   -- return input channels for use by the button
@@ -215,9 +206,13 @@ mkLane pp = atom (pName pp "lane") $ do
 -- Utility Stuff -------------------------------------------------------
 
 zero, one, three :: Int64
-zero = 0
-one = 1
+zero  = 0
+one   = 1
 three = 3
 
 printAllProbes :: Atom ()
 printAllProbes = mapM_ printProbe =<< probes
+
+-- | Helper function to append "high" or "low" to names of various components
+pName :: Bool -> String -> String
+pName b nm = nm ++ if b then "_high" else "_low"
