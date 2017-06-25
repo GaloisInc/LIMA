@@ -1,5 +1,5 @@
 -- |
--- Module      :  AtomOM1
+-- Module      :  OM1
 -- Copyright   :  Benjamin Jones 2016
 -- License     :  BSD3
 --
@@ -10,12 +10,12 @@
 -- A specification for the distributed, fault tolerant system OM(1) written
 -- using LIMA
 --
-module AtomOM1
+module OM1
   ( om1
   )
 where
 
-import Control.Monad (forM_)
+import Control.Monad (forM, forM_)
 import Data.Int
 
 import Language.LIMA
@@ -24,13 +24,6 @@ import Language.Sally
 
 
 -- Parameters ----------------------------------------------------------
-
--- Node clock periods (in ticks)
-initPeriod     = 100
-sourcePeriod   = 20
-relayPeriod    = 7
-recvPeriod     = 13
-observerPeriod = 1
 
 numRelays  = 3
 numRecvs   = 3
@@ -59,21 +52,21 @@ om1 = do
                 (map fst (r2rs !! ident))
 
   -- declare receiver nodes
-  forM_ recvSet $ \ident ->
-    recv ident [ snd ((r2rs !! i) !! ident) | i <- relaySet ]
-         (votes !! ident)
+  dones <- forM recvSet $ \ident ->
+    recv ident [ snd ((r2rs !! i) !! ident) | i <- relaySet ] (votes !! ident)
 
-  -- declare the observer
+  assert "agreement" $ imply (and_ (map value dones)) (all_ (\(v,w) -> value v ==. value w)
+                                                [ (v,w) | v <- votes, w <- votes ])
+  assert "validity"  $ imply (and_ (map value dones)) (all_ (\v -> value v ==. goodMsg) votes)
+
   observer
-
 
 -- Source --------------------------------------------------------------
 
 -- | Source node, a.k.a. "The General"
 source :: [ChanInput]  -- ^ output channels to broadcast on
        -> Atom ()
-source cs = period sourcePeriod
-          . atom "source" $ do
+source cs = atom "source" $ do
   done <- bool "done" False
 
   -- activation condition
@@ -91,8 +84,7 @@ relay :: Int          -- ^ relay id
       -> ChanOutput   -- ^ channel from source
       -> [ChanInput]  -- ^ channels to receivers
       -> Atom ()
-relay ident inC outCs = period relayPeriod
-                      . atom (tg "relay"  ident) $ do
+relay ident inC outCs = atom (tg "relay"  ident) $ do
   done <- bool "done" False
   msg  <- msgVar (tg "relay_msg" ident)
 
@@ -114,9 +106,8 @@ relay ident inC outCs = period relayPeriod
 recv :: Int           -- ^ receiver id
      -> [ChanOutput]  -- ^ channels from relays
      -> V MsgType
-     -> Atom ()
-recv ident inCs vote = period recvPeriod
-                     . atom (tg "recv" ident) $ do
+     -> Atom (V Bool)
+recv ident inCs vote = atom (tg "recv" ident) $ do
   done <- bool "done" False
   buffer <- mapM msgVar [ tg (tg "buffer" ident) i | i <- relaySet ]
 
@@ -132,6 +123,8 @@ recv ident inCs vote = period recvPeriod
     cond $ all_ (not_ . isMissing) buffer
     vote <== computeVote (value <$> buffer)
     done <== Const True
+
+  return done
 
 
 -- | Boyer-Moore Fast Majority Vote
@@ -155,9 +148,7 @@ computeVote = fst . foldr iter (missingMsgValueE, Const 0)
 -- phase 0. This node has no activation or behavior so its part in the model
 -- is trivial.
 observer :: Atom ()
-observer = period observerPeriod
-         . exactPhase 0
-         . atom "observer" $ do
+observer = atom "observer" $ do
   ps <- probes
   mapM_ printProbe ps
 

@@ -4,7 +4,7 @@ import Language.LIMA
 import Language.LIMA.C
 import Language.Sally
 
-import AtomOM1 (om1)
+import OM1 (om1)
 
 main :: IO ()
 main = do
