@@ -3,3 +3,5 @@ om1.c
 om1.h
 om1.mcmt
 cabal.project.local
+.cabal-sandbox
+cabal.sandbox.config
