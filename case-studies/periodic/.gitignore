@@ -3,3 +3,5 @@ periodic
 *.h
 *.mcmt
 *.png
+.cabal-sandbox
+cabal.sandbox.config
