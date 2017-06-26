@@ -1,5 +1,7 @@
 module Main (module Main) where
 
+import Control.Monad (forM_)
+
 import Language.LIMA
 import Language.LIMA.Graph
 import Language.LIMA.C
@@ -7,21 +9,18 @@ import Language.Sally
 
 import Periodic
 
+-- | Atoms to compile
+as :: [Atom ()]
+as = [ex1, ex2, ex3, ex4]
 
 main :: IO ()
 main = do
-  compileToC "ex1" ex1
-  compileToSally "periodic_ex1" defaultCfg "periodic_ex1.mcmt" ex1 Nothing
-  graphAtom "periodic_ex1" ex1
-
-  compileToC "ex2" ex2
-  compileToSally "periodic_ex2" defaultCfg "periodic_ex2.mcmt" ex2 Nothing
-  graphAtom "periodic_ex2" ex2
-
-  compileToC "ex3" ex3
-  compileToSally "periodic_ex3" defaultCfg "periodic_ex3.mcmt" ex3 Nothing
-  graphAtom "periodic_ex3" ex3
-
+  let nm i = "ex" ++ show i
+  forM_ (zip [1..] as) $ \(i,a) -> do
+    compileToC (nm i) a
+    let prefix = "periodic_" ++ nm i
+    compileToSally prefix defaultCfg (prefix ++ ".mcmt") a Nothing
+    graphAtom prefix ex1
 
 
 -- C Code Generator Utilities --------------------------------------------
