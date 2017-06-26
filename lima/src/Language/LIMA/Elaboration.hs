@@ -59,6 +59,7 @@ data Global = Global
   , gVarId     :: Int  -- ^ integer supply for variable IDs
   , gArrayId   :: Int  -- ^ integer supply for array IDs
   , gChannelId :: Int  -- ^ integer supply for channel IDs
+  , gClockId   :: Int  -- ^ integer supply for clock IDs
   , gState     :: [StateHierarchy]  -- ^ global state hierarchies
   , gProbes    :: [(String, Hash)]  -- ^ probe names and expression hashes
   , gPeriod    :: Int               -- ^ Atom global period, used by sub-atoms
@@ -74,6 +75,7 @@ initialGlobal = Global
   , gVarId     = 0
   , gArrayId   = 0
   , gChannelId = 0
+  , gClockId = 0
   , gState     = []
   , gProbes    = []
   , gPeriod    = 1

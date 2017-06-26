@@ -18,6 +18,7 @@ module Language.LIMA.Language
   , defSCtx
   -- * Hierarchical Rule Declarations
   , atom
+  , getNewClock
   , getName
   , getCompiledName
   , period
@@ -109,6 +110,14 @@ atom name design = do
             , parent { atomSubs = atomSubs parent ++ [child] }))
   put (reverse nts)
   return a
+
+-- | Return the next available clock Id
+getNewClock :: Atom Int
+getNewClock = do
+  (st, (g, a)) <- get
+  let clkId = gClockId g
+  set (st, (g { gClockId = clkId+1 }, a))
+  return clkId
 
 -- | Return the top-level name of the atom.
 getName :: Atom Name
