@@ -342,20 +342,21 @@ trFormulas conf name _sh rules chans = masterList ++ [masterFormula]
                                           calMinTimePred
     calMinTime = mkCalMinTimeExpr id name
     calMinTimePred =
-      simplifyOrs $ SPOr (Seq.empty
-                      |> SPAnd (Seq.empty |> calMinEqualPred |> calMinLeqPred)
-                      |> calTimeUnconstrained)
-    -- when 0 <= t, require that calMinTime == t
-    feq t = SPImpl (SPLEq zeroExpr t) (SPEq calMinTime t)
-    calMinEqualPred = simplifyOrs $ SPOr  (Seq.fromList (map feq calTimes))
-    -- when 0 <= t, require that calMinTime <= t
+      simplifyOrs $ SPAnd (Seq.empty |> calMinEqualPred |> calMinLeqPred)
+    -- all times are the 'invalid' time
+    finv = SPEq invalidTime
+    calTimesInvalid =
+      simplifyAnds (SPAnd (Seq.fromList
+                            (SPEq calMinTime invalidTime : map finv calTimes)))
+    -- exists cal time t_i such that 0 <= t_i and calMinTime == t_i or
+    -- else calMinTime is invalid (-1)
+    feq t = SPAnd (Seq.empty |> SPLEq zeroExpr t |> SPEq calMinTime t)
+    calMinEqualPred =
+      simplifyOrs $ SPOr (Seq.fromList
+                           (calTimesInvalid : map feq calTimes))
+    -- forall i such that 0 <= t_i, calMinTime <= t_i.
     fleq t = SPImpl (SPLEq zeroExpr t) (SPLEq calMinTime t)
     calMinLeqPred = simplifyAnds $ SPAnd (Seq.fromList (map fleq calTimes))
-    -- when all times are the 'invalid' time, require calMinTime to be invalid
-    finv = SPEq invalidTime
-    calTimeUnconstrained = SPImpl (simplifyAnds
-                                     (SPAnd (Seq.fromList (map finv calTimes))))
-                                  (SPEq calMinTime invalidTime)
 
 
 -- | Return all the untyped expressions used in a rule.
@@ -427,13 +428,12 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
                                 (mkStateTypeName name)
                                 []
                                 clockPred
-        -- to construct the clock predicate we call 'minExpr' which builds an
-        -- expression representing the minimum time on the calendar
+        -- to construct the clock predicate we use 'minExpr' which is
+        -- constrained to be the minimum time on the calendar
         -- (ignoring invalid times)
         clockPred =
           if not (null chans)
-             then -- let m = minExpr calTimes (Just invalidTime)
-                  let m = mkCalMinTimeExpr stateName name
+             then let m = mkCalMinTimeExpr stateName name
                   in SPAnd $ (Seq.empty
                                |> SPLt (mkClockExpr stateName name) m
                                |> SPEq (mkClockExpr nextName name) m
@@ -449,6 +449,7 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
         -- be modified...
         clkUsed = [mkClockTimeName name]
                ++ [ mkLastTransName name | cfgDebug conf ]
+               ++ [ mkCalMinTimeName name ]
         clkLeftovers = Seq.fromList $ map handleLeftovers (stVars \\ clkUsed)
         -- calTimes = map ( varExpr' . stateName . snd . mkChanStateNames
         --                . uglyHack . AEla.cinfoName
@@ -461,7 +462,8 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
         stVars = map fst (sVars st)
 
         mkTName :: AEla.Rule -> Name
-        mkTName r@AEla.Rule{} = mkTransitionName (AEla.ruleId r) name
+        mkTName r@AEla.Rule{} = mkTransitionName (AEla.ruleId r)
+                                                 (uglyHack (AEla.ruleName r))
         mkTName _ = error "impossible! assert or coverage rule found in mkTName"
 
         mkLetBinds :: AEla.Rule -> [SallyLet]
@@ -536,6 +538,7 @@ trRules conf name st umap chans rules = mapMaybe trRule rules
                         ++ map (\(c,_,_) -> snd (chanNames c)) (AEla.ruleChanWrite r)
                         ++ map (snd . chanNames) (AEla.ruleChanRead r)
                         ++ [ mkLastTransName name | cfgDebug conf ]
+                        ++ [ mkCalMinTimeName name ]
 
               -- leftovers are vars not explicitly mentioned in the atom body,
               -- we need to make sure they stutter using 'handleLeftovers'
@@ -689,10 +692,13 @@ mkChanStateNames name = (chanVar, chanTime)
   where chanVar   = name `bangNames` "var"
         chanTime = name `bangNames` "time"
 
--- | i name --> @name_transition_i@
-mkTransitionName :: Int -> Name -> Name
-mkTransitionName i name = name `scoreNames` "transition" `scoreNames`
-                          nameFromS (show i)
+-- | i name --> @transition_rname_i@
+mkTransitionName :: Int   -- ^ from rule #
+                 -> Name  -- ^ from rule Name
+                 -> Name
+mkTransitionName i rname =
+  "transition" `scoreNames` rname
+               `scoreNames` nameFromS (show i)
 
 -- | cname --> @cname!fault@
 mkFaultChanValueName :: Name -> Name
