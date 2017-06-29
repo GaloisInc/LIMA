@@ -16,8 +16,6 @@ module Language.Sally.Translation (
   , TrConfig(..)
 ) where
 
-import Debug.Trace
-
 import           Control.Arrow (second, (***))
 import           Data.Foldable (find, foldl')
 import qualified Data.Map.Strict as Map
