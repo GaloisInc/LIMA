@@ -11,7 +11,11 @@
 --
 module Periodic (module Periodic) where
 
+import Control.Monad (mapM_)
+import Data.Int
+
 import Language.LIMA
+import Language.LIMA.C.Util (printProbe)
 import Language.Sally
 
 
@@ -71,8 +75,41 @@ ex4 = atom "ex4" $ do
 
   clocked 2 0 $ atom "atomX" $ do
     incr x
+    decr y
+    probe "x + y" (value x + value y)
 
-  clocked 5 0 $ atom "atomY" $ do
+  clocked 5 3 $ atom "atomY" $ do
     incr y
+    probe "y" (value y)
 
-  assert "y < 4" (value y <. 4)
+  assert "y <= 0" (value y <=. 0)
+  mapM_ printProbe =<< probes
+
+
+-- | Example illustrating "kickstart" mechanism for period execution.
+ex5 :: Atom ()
+ex5 = atom "ex5" $ do
+
+  let ex5Phase = 1
+  let ex5Period = 5
+
+  (ii, io) <- channel "init_channel" Bool
+  (ki, ko) <- channel "kick_channel" Bool
+
+  atom "init" $ do
+    done <- var "done" False
+    cond $ not_ (value done)
+    writeChannelWithDelay (DelayTicks ex5Phase) ii true
+    done <== true
+
+  atom "kicker" $ do
+    cond $ fullChannel io ||. fullChannel ko
+    _ <- readChannel io
+    _ <- readChannel ko
+    writeChannelWithDelay (DelayTicks ex5Period) ki true
+
+    atom "node" $ do
+      x <- var "x" (0 :: Int64)
+      incr x
+      assert "x bounded" $ value x <. 5  -- smoke test
+
