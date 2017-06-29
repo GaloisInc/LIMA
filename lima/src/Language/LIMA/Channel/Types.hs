@@ -38,6 +38,7 @@ mkChanOutput = ChanOutput
 -- | Channel delay specification
 data ChannelDelay = DelayDefault
                   | DelayTicks Word64
+  deriving (Eq, Show)
 
 
 -- Channel Operations --------------------------------------------------

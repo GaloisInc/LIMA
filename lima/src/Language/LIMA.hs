@@ -40,8 +40,8 @@ module Language.LIMA
     probes, assert, cover, assertImply, Name, path, clock, nextCoverage,
     -- ** channels
     channel, ChanInput (..), ChanOutput (..),
-    writeChannelWithDelay, writeChannel,
-    readChannel, fullChannel,
+    writeChannelWithDelay, writeChannel, readChannel, initChannel,
+    fullChannel, ChannelDelay(..),
     -- * Expressions
     -- | Module: "Language.LIMA.Expressions"
     E(..), V(..), UE(..), UV(..), A(..), UA(..), Expr(..), Expression(..),

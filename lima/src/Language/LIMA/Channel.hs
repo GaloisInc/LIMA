@@ -19,6 +19,7 @@ module Language.LIMA.Channel
   , writeChannelWithDelay
   , writeChannel
   , readChannel
+  , initChannel
   , fullChannel
     -- * misc exports
   , channelPrefix
@@ -80,6 +81,15 @@ readChannel cout = do
   (st, (g, atom)) <- get
   set (st, (g, atom { atomChanRead = atomChanRead atom ++ [cout] }))
   return . VRef . V . chanVar $ cout
+
+-- | Place a channel value and time *directly* on the calendar at
+-- initialization time. This differs from 'writeChannelWithDelay' in that no
+-- node has to fire in order for the value and time to appear on the calendar.
+initChannel :: ChanInput -> Const -> ChannelDelay -> Atom ()
+initChannel cin c d = do
+  (st, (g, atom)) <- get
+  set (st, (g, atom { atomChanInit = atomChanInit atom ++ [(cin, c, d)] }))
+  return ()
 
 -- | Check if the channel contains a message.
 fullChannel :: ChanOutput -> E Bool

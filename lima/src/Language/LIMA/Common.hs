@@ -41,6 +41,7 @@ import MonadLib     -- re-exports Control.Monad
 import Text.Printf
 
 import Language.LIMA.Language
+import qualified Language.LIMA.Elaboration as E
 
 -- | A Timer.
 newtype Timer = Timer { timerVar :: V Word64 }
@@ -158,41 +159,55 @@ hysteresis a b u = do
 -- number of extra periods.
 clocked :: Word64  -- ^ period
         -> Word64  -- ^ phase
-        -> Atom a  -- ^ node to clock
+        -> ([ChanOutput] -> Atom a)  -- ^ node to clock
         -> Atom a
 clocked per pha node = do
   b <- cctxPeriodicity <$> ask
   if b
+
+    -- periodicity through calendar automata option
     then do
       clkId <- getNewClock
       let nm = "clock" ++ show clkId
-      init_out <- mkInit nm
-      (ki, ko) <- channel (nm ++ "_kick_channel") Bool
-      atom (nm ++ "_clocked") $ do
-        cond $ fullChannel ko ||. fullChannel init_out
-        _ <- readChannel ko
-        _ <- readChannel init_out
-        writeChannelWithDelay (DelayTicks per) ki (Const True)
-        atom (nm ++ "_node") node
-    else period (fromIntegral per) (phase (fromIntegral pha) node)
-  where
-    mkInit :: Name -> Atom ChanOutput
-    mkInit nm = do
-      done <- bool (nm ++ "_init_done") False
-      (ii, io) <- channel (nm ++ "_init_channel") Bool
+      -- let newSubAtom = atom nm $ do
+      let newSubAtom = do
+            (ki, ko) <- channel (nm ++ "_kick_channel") Bool
+            (ii, io) <- channel (nm ++ "_init_channel") Bool
+            (ni, no) <- channel (nm ++ "_node_channel") Bool
 
-      atom (nm ++ "_init") $ do
-        cond $ not_ (value done)
-        writeChannelWithDelay (DelayTicks pha) ii (Const True)
-        done <== Const True
+            atom "kicker" $ do
+              cond $ fullChannel ko ||. fullChannel io
+              initChannel ii (CBool True) (DelayTicks pha)
+              _ <- readChannel io
+              writeChannelWithDelay (DelayTicks per) ki (Const True)
+              writeChannelWithDelay (DelayTicks 0)   ni (Const True)
 
-      return io
+            atom "node" $ do
+              cond $ fullChannel no
+              _ <- readChannel no
+              node [io]
+
+      name' <- E.addName nm
+      (st1, (g1, parent)) <- get
+      ctx <- ask
+      let ((a, nts), atst) = E.buildAtom ctx st1 g1 { E.gState = [] } name'
+                                         newSubAtom
+          (st2, (g2, child)) = atst
+      set (st2, ( g2 { E.gState = E.gState g1
+                               ++ [E.StateHierarchy nm (E.gState g2)] }
+                , parent { E.atomSubs = E.atomSubs parent ++ [child] }))
+      put (reverse nts)
+      return a
+
+    -- periodicity through scheduler option
+    else period (fromIntegral per) (phase (fromIntegral pha) (node []))
 
 
 -- Switched Architectures ------------------------------------------------------
 
 typ :: Type
 typ = Int64
+
 type Typ = Int64
 
 typDef :: Typ

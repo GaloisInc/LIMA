@@ -16,6 +16,8 @@ module Language.LIMA.C.Code
   , RuleCoverage
   ) where
 
+import Debug.Trace
+
 import Control.Arrow (second)
 import Data.List
 import Data.Maybe
@@ -573,9 +575,15 @@ codeRule mp cfg rule@Rule{} =
       let cn = chanName cin
       in    "    " ++ stateChanVarCName cfg cn ++ " = " ++ id' h ++ ";\n"
          ++ "    " ++ stateChanReadyVarCName cfg cn ++ " = true;\n"
-    handleChanWrite (_, _, DelayTicks _) =
-      error ("writeChannelWithDelay with non-default delay is not supported\n"
-            ++ "in the C code generator.\n")
+    -- TODO: for now we just place the message for delivery when
+    -- writeChannelWithDelay is called. No delay is introduced.
+    handleChanWrite (cin, h, DelayTicks _) =
+      trace (unlines [ "WARNING: writeChannelWithDelay with non-default delay"
+                     , "is not fully supported\n in the C code generator.\n"
+                     ]) $
+        let cn = chanName cin
+        in    "    " ++ stateChanVarCName cfg cn ++ " = " ++ id' h ++ ";\n"
+           ++ "    " ++ stateChanReadyVarCName cfg cn ++ " = true;\n"
 
 -- Don't generate code for the 'Assert' or 'Cover' variants
 codeRule _ _ _ = ""

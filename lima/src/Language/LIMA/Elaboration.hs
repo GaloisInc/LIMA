@@ -114,6 +114,8 @@ data AtomDB = AtomDB
   , atomChanWrite   :: [(ChanInput, Hash, ChannelDelay)]
     -- | Set of channel outputs which are read by the atom
   , atomChanRead    :: [ChanOutput]
+    -- | Set of channel initializations
+  , atomChanInit    :: [(ChanInput, Const, ChannelDelay)]
   }
 
 -- | Show AtomDB instance for debugging purposes.
@@ -149,6 +151,7 @@ data Rule
     , rulePhase       :: Phase
     , ruleChanWrite   :: [(ChanInput, Hash, ChannelDelay)]
     , ruleChanRead    :: [ChanOutput]
+    , ruleChanInit    :: [(ChanInput, Const, ChannelDelay)]
     }
   | -- | An assertion statement
     Assert
@@ -184,7 +187,9 @@ data ChanInfo = ChanInfo
   , cinfoName      :: Name        -- ^ user supplied channel name
   , cinfoType      :: Type        -- ^ channel type
   , cinfoValueExpr :: Maybe Hash  -- ^ hash to channel value expression, may
-  }                               --   or may not be set
+                                  --   or may not be set
+  , cinfoInit      :: Maybe (Const, ChannelDelay)  -- ^ chan initialization
+  }
   deriving (Eq, Show)
 
 -- | A StateHierarchy is a namespaced global state structure which is the
@@ -249,7 +254,8 @@ elaborateRules parentEnable atom =
         , rulePeriod     = atomPeriod  atom
         , rulePhase      = atomPhase   atom
         , ruleChanWrite  = atomChanWrite atom
-        , ruleChanRead = atomChanRead atom
+        , ruleChanRead   = atomChanRead atom
+        , ruleChanInit   = atomChanInit atom
         }
 
     assert :: (Name, Hash) -> UeState Rule
@@ -331,6 +337,7 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
                                      , cinfoName      = chanName c
                                      , cinfoType      = chanType c
                                      , cinfoValueExpr = Just h
+                                     , cinfoInit      = Nothing
                                      }
                                  )
               fread :: ChanOutput -> (Int, ChanInfo)
@@ -342,10 +349,24 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
                             , cinfoName      = chanName c
                             , cinfoType      = chanType c
                             , cinfoValueExpr = Nothing
+                            , cinfoInit      = Nothing
                             }
                         )
+              finit :: (ChanInput, Const, ChannelDelay) -> (Int, ChanInfo)
+              finit (c, v, d) = ( chanID c
+                                 , ChanInfo
+                                     { cinfoSrc       = Just (ruleId r)
+                                     , cinfoRecv      = Nothing
+                                     , cinfoId        = chanID c
+                                     , cinfoName      = chanName c
+                                     , cinfoType      = chanType c
+                                     , cinfoValueExpr = Nothing
+                                     , cinfoInit      = Just (v, d)
+                                     }
+                                 )
               m = Map.fromList (map fwrite (ruleChanWrite r)
-                             ++ map fread (ruleChanRead r))
+                             ++ map fread (ruleChanRead r)
+                             ++ map finit (ruleChanInit r))
           in m
         getChannels' _ = Map.empty  -- asserts and coverage statements have no channels
 
@@ -357,12 +378,16 @@ getChannels rs = Map.unionsWith mergeInfo (map getChannels' rs)
              (cinfoName c1 == cinfoName c2) &&
              (cinfoType c1 == cinfoType c2) &&
              (cinfoValueExpr c1 == cinfoValueExpr c2 ||  -- either equal or
-               isNothing (cinfoValueExpr c1) ||            -- one is a Nothing
-               isNothing (cinfoValueExpr c2))
+               isNothing (cinfoValueExpr c1) ||          -- one is a Nothing
+               isNothing (cinfoValueExpr c2)) &&
+             (cinfoInit c1 == cinfoInit c2 ||  -- either equal or
+               isNothing (cinfoInit c1) ||     -- one is a Nothing
+               isNothing (cinfoInit c2))
              then c1 { cinfoSrc = muxMaybe (cinfoSrc c1) (cinfoSrc c2)
                      , cinfoRecv = muxMaybe (cinfoRecv c1) (cinfoRecv c2)
                      , cinfoValueExpr = muxMaybe (cinfoValueExpr c1)
                                                  (cinfoValueExpr c2)
+                     , cinfoInit = muxMaybe (cinfoInit c1) (cinfoInit c2)
                      }
              else error $ "Elaboration: getChannels: mismatch occured"
                        ++ "\n" ++ show c1
@@ -396,6 +421,7 @@ buildAtom ctx st g name at =
                          , atomCovers    = []
                          , atomChanWrite = []
                          , atomChanRead  = []
+                         , atomChanInit  = []
                          }
                        )
                  )
