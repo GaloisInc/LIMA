@@ -90,7 +90,7 @@ ex4 = atom "ex4" $ do
     probe "y" (value y)
     mapM_ readChannel res  -- reset clock channel(s)
 
-  assert "y <= 0" (value y <=. 0)
+  assert "y <= 0" (value y <=. 0)  -- valid
   mapM_ printProbe =<< probes
 
 
