@@ -26,11 +26,15 @@ ex1 :: Atom ()
 ex1 = atom "ex1" $ do
   x <- int64 "x" 0
   incr x
-  assert "x is bounded" (value x <. 10)  -- obviously untrue
+  assert "x is bounded" (value x <. 3)  -- obviously untrue
 
 -- | Clocked version of ex1
 ex2 :: Atom ()
-ex2 = clocked 5 0 ex1  -- assertion is still not ture
+ex2 = atom "ex2" $ clocked 5 3 $ \res -> do
+  x <- int64 "x" 0
+  incr x
+  mapM_ readChannel res  -- reset clock channel(s)
+  assert "x is bounded" (value x <. 3)  -- obviously untrue
 
 -- | Example with two subatoms that communicate. Each time that each of the
 -- nodes executes, it decrements a counter and sends a message to the other
@@ -44,9 +48,10 @@ ex3 = atom "ex3" $ do
   (acin, acout) <- channel "ach" Bool
   (bcin, bcout) <- channel "bch" Bool
 
-  atom "alice" $ clocked 2 1 $ do
+  atom "alice" $ clocked 2 1 $ \res -> do
     x <- int8 "x" 0
     writeChannel acin true
+    mapM_ readChannel res  -- reset clock channel(s)
     decr x
 
     atom "alice_rx" $ do
@@ -56,9 +61,10 @@ ex3 = atom "ex3" $ do
 
     assert "alice's x bounded" ((value x <=. 3) &&. (value x >=. (-3)))
 
-  atom "bob" $ clocked 2 0 $ do
+  atom "bob" $ clocked 2 0 $ \res -> do
     x <- int8 "x" 0
     writeChannel bcin true
+    mapM_ readChannel res  -- reset clock channel(s)
     decr x
 
     atom "bob_rx" $ do
@@ -73,43 +79,49 @@ ex4 = atom "ex4" $ do
   x <- int64 "x" 0
   y <- int64 "y" 0
 
-  clocked 2 0 $ atom "atomX" $ do
+  clocked 2 0 $ \res -> atom "atomX" $ do
     incr x
     decr y
     probe "x + y" (value x + value y)
+    mapM_ readChannel res  -- reset clock channel(s)
 
-  clocked 5 3 $ atom "atomY" $ do
+  clocked 5 3 $ \res -> atom "atomY" $ do
     incr y
     probe "y" (value y)
+    mapM_ readChannel res  -- reset clock channel(s)
 
   assert "y <= 0" (value y <=. 0)
   mapM_ printProbe =<< probes
 
 
--- | Example illustrating "kickstart" mechanism for period execution.
+-- | Example illustrating "kickstart" mechanism for period execution. The
+-- library function 'clocked' in "Language.LIMA.Common" generalizes this
+-- pattern.
 ex5 :: Atom ()
 ex5 = atom "ex5" $ do
 
-  let ex5Phase = 1
+  let ex5Phase = 3
   let ex5Period = 5
 
   (ii, io) <- channel "init_channel" Bool
   (ki, ko) <- channel "kick_channel" Bool
-
-  atom "init" $ do
-    done <- var "done" False
-    cond $ not_ (value done)
-    writeChannelWithDelay (DelayTicks ex5Phase) ii true
-    done <== true
+  (ni, no) <- channel "node_channel" Bool
 
   atom "kicker" $ do
+    t <- var "test" (0 :: Int64)
+    initChannel ii (CBool True) (DelayTicks ex5Phase)
+
     cond $ fullChannel io ||. fullChannel ko
     _ <- readChannel io
-    _ <- readChannel ko
     writeChannelWithDelay (DelayTicks ex5Period) ki true
+    writeChannelWithDelay (DelayTicks 0) ni true
+    incr t
 
-    atom "node" $ do
-      x <- var "x" (0 :: Int64)
-      incr x
-      assert "x bounded" $ value x <. 5  -- smoke test
+  atom "node" $ do
+    x <- var "x" (0 :: Int64)
+    cond $ fullChannel no
+    _ <- readChannel no
+    _ <- readChannel io
+    incr x
+    assert "x bounded" $ value x <. 5  -- smoke test
 

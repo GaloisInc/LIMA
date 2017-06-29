@@ -21,7 +21,7 @@ main = do
     compileToC (nm i) a
     let prefix = "periodic_" ++ nm i
     compileToSally prefix defaultCfg (prefix ++ ".mcmt") a Nothing
-    graphAtom prefix ex1
+    graphAtom prefix a
 
 
 -- C Code Generator Utilities --------------------------------------------
