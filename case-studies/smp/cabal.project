@@ -1,0 +1,5 @@
+packages: .
+          ../../lima/
+          ../../lima-c/
+          ../../lima-sally/
+          ../../dependencies/language-sally

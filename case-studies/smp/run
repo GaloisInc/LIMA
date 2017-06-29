@@ -1,0 +1,3 @@
+#!/bin/bash
+go=$(find . -name lima-smp | tail -1)
+exec "$go"
