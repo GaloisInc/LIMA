@@ -16,8 +16,10 @@ module Language.Sally.Translation (
   , TrConfig(..)
 ) where
 
+import Debug.Trace
+
 import           Control.Arrow (second, (***))
-import           Data.Foldable (foldl')
+import           Data.Foldable (find, foldl')
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (mapMaybe, fromMaybe)
 import           Data.Sequence ((><), (|>))
@@ -84,7 +86,7 @@ translate conf name hier umap rules chans =
     tresConsts'   = []  -- TODO support defined constants
     tresState'    = trState conf name hier rules chans
     tresFormulas' = trFormulas conf name hier rules chans
-    tresInit'     = trInit conf name hier rules
+    tresInit'     = trInit conf name hier chans rules
     tresTrans'    = trRules conf name tresState' umap chans rules
     tresSystem'   = trSystem conf name
     tresQueries'  = trQueries name umap chans rules
@@ -204,10 +206,16 @@ bangPrefix :: Maybe Name -> Name -> Name
 bangPrefix mn n = maybe n (`bangNames` n) mn
 
 -- | Produce a predicate describing the initial state of the system.
-trInit :: TrConfig -> Name -> AEla.StateHierarchy -> [AEla.Rule] -> SallyStateFormula
-trInit conf name sh rules = SallyStateFormula (mkInitStateName name)
-                                               (mkStateTypeName name)
-                                               spred
+trInit
+  :: TrConfig
+  -> Name
+  -> AEla.StateHierarchy
+  -> [AEla.ChanInfo]
+  -> [AEla.Rule]
+  -> SallyStateFormula
+trInit conf name sh chans rules = SallyStateFormula (mkInitStateName name)
+                                                    (mkStateTypeName name)
+                                                    spred
   where
     spred  = simplifyAnds $ SPAnd (Seq.fromList [ nodeInit
                                                 , clockInit
@@ -220,15 +228,41 @@ trInit conf name sh rules = SallyStateFormula (mkInitStateName name)
                                            else go Nothing sh
     go :: Maybe Name -> AEla.StateHierarchy -> SallyPred
     go prefix (AEla.StateHierarchy nm items) =
-      SPAnd (Seq.fromList $ map (go (Just $ prefix `bangPrefix` uglyHack nm)) items)
+      SPAnd (Seq.fromList $ map (go (Just $ prefix `bangPrefix` uglyHack nm))
+                                items)
     go prefix (AEla.StateVariable nm c) =
       SPEq (varExpr' (prefix `bangPrefix` uglyHack nm)) (trConstE c)
+
+    -- Two cases are handled for channel initialization. The 'ChanInfo' struct
+    -- may specify initial values and times for the channel and these are to
+    -- be put directly on the calendar at initialization time. Otherwise a
+    -- default value and the 'invalidTime' are placed on the calendar.
     go prefix (AEla.StateChannel nm t) =
-      let (chanVar, chanTime) = mkChanStateNames (prefix `bangPrefix` uglyHack nm)
-      in SPAnd (  Seq.empty
+      let (chanVar, chanTime) = mkChanStateNames
+                                  (prefix `bangPrefix` uglyHack nm)
+      in case lkChan nm of
+           Nothing ->
+             SPAnd (Seq.empty
                |> SPEq (varExpr' chanVar) (trInitForType t)
                |> SPEq (varExpr' chanTime) invalidTime)
-    go _prefix (AEla.StateArray _ _) = error "atom-sally does not yet support arrays"
+           Just (c,d) ->
+             let d' = case d of
+                        ACTyp.DelayDefault  -> realExpr (cfgMessageDelay conf)
+                        ACTyp.DelayTicks t' -> realExpr t'
+             in SPAnd (Seq.empty
+               |> SPEq (varExpr' chanVar) (trConstE c)
+               |> SPEq (varExpr' chanTime) d')
+
+    go _prefix (AEla.StateArray _ _) =
+      error "atom-sally does not yet support arrays"
+
+    -- TODO under the assumption that channel names are not unique, what
+    -- happens here?
+    lkChan :: ATyp.Name -> Maybe (AExp.Const, ACTyp.ChannelDelay)
+    lkChan nm = find (\ci -> stripPrx (AEla.cinfoName ci) == nm) chans >>=
+                AEla.cinfoInit
+      where
+        stripPrx = reverse . takeWhile (/= '.') . reverse
 
     clockInit = SPEq (varExpr' (mkClockTimeName name)) initialTime
     debugInit = if cfgDebug conf
