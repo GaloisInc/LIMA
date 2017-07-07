@@ -236,6 +236,7 @@ writeC name config state rules (mp, schedule') assertNames coverNames probeNames
       [ -- includes
         "#include <stdbool.h>"
       , "#include <stdint.h>"
+      , "#include <inttypes.h>"
       , codeIf (M.fold (\_ e ans -> isMathHCall e || ans ) False (snd mp))
                "#include <math.h>"
       , ""
@@ -409,8 +410,9 @@ writeC name config state rules (mp, schedule') assertNames coverNames probeNames
 
     -- generate header file code for the main .c module
     h = unlines
-      [ "#include <stdbool.h>"
-      , "#include <stdint.h>"
+      [ "#include <stdbool.h>"   -- for bool type
+      , "#include <stdint.h>"    -- for fixed width integer & unsigned
+      , "#include <inttypes.h>"  -- for printf macros
       , ""
       , preHCode
       , ""

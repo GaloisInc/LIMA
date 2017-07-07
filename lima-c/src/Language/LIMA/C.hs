@@ -13,13 +13,14 @@
 module Language.LIMA.C
   ( -- * Code
     -- | Module: "Language.LIMA.C.Code"
-    Config (..), defaults, Clock (..), defaultClock, writeC, cType, RuleCoverage,
+    Config (..), defaults, Clock (..), defaultClock, writeC, cType,
+    RuleCoverage,
     -- * Compilation
     -- | Module: "Language.LIMA.C.Compile"
     compile, CompileResult(..), reportSchedule, Schedule,
     -- * Utilities
     -- | Module: "Language.LIMA.C.Util"
-    printString, printIntegralE, printFloatingE, printProbe
+    printString, printE, printProbe
   ) where
 
 import Language.LIMA.C.Code

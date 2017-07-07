@@ -7,7 +7,9 @@ This demonstrates the use of 'word16'' to reference an external variable, and
 the use of 'call' to call an external function.
 
 -}
-module Language.LIMA.C.Example.External where
+module Language.LIMA.C.Example.External
+  (module Language.LIMA.C.Example.External)
+where
 
 import Language.LIMA
 import Language.LIMA.C
@@ -29,7 +31,7 @@ extern = do
   atom "update" $ do
     -- Call external function 'new_random' which updates g_random:
     call "new_random"
-    printIntegralE "g_random" $ value rng
+    printE "PRId16" "g_random" $ value rng
 
 prePostCode :: [Name] -> [Name] -> [(Name, Type)] -> (String, String)
 prePostCode _ _ _ =
