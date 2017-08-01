@@ -5,3 +5,4 @@ periodic
 *.png
 .cabal-sandbox
 cabal.sandbox.config
+smp

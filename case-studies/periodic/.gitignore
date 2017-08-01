@@ -5,3 +5,7 @@ periodic
 *.png
 .cabal-sandbox
 cabal.sandbox.config
+ex1
+ex2
+ex3
+ex4
