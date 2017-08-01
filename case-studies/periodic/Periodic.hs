@@ -74,24 +74,24 @@ ex3 = atom "ex3" $ do
 
     assert "bob's x bounded" ((value x <=. 3) &&. (value x >=. (-3)))
 
+
+-- | Two periodic nodes modify a shared state variable.
 ex4 :: Atom ()
 ex4 = atom "ex4" $ do
   x <- int64 "x" 0
-  y <- int64 "y" 0
+  probe "x" (value x)
 
-  clocked 2 0 $ \res -> atom "atomX" $ do
+  clocked 2 0 $ \res -> atom "atom_incr" $ do
     incr x
-    decr y
-    probe "x + y" (value x + value y)
     mapM_ readChannel res  -- reset clock channel(s)
 
-  clocked 5 3 $ \res -> atom "atomY" $ do
-    incr y
-    probe "y" (value y)
-    mapM_ readChannel res  -- reset clock channel(s)
+  clocked 5 3 $ \res -> atom "atom_decr" $ do
+    decr x
+    mapM_ readChannel res
 
-  assert "y <= 0" (value y <=. 0)  -- valid
+  assert "x >= 0" (value x >=. 0)  -- valid
   mapM_ printProbe =<< probes
+
 
 
 -- | Example illustrating "kickstart" mechanism for period execution. The
