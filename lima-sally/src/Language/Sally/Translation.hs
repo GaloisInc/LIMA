@@ -415,7 +415,7 @@ trQueries name umap chans rules =
           h    = AEla.ruleAssert r
           pre  = SPExpr $ trUExpr id name umap chans ues h
           lts  = mkLetBinds r
-      in Just $ SallyQuery (mkTSystemName name) lts pre
+      in Just $ mkSallyQuery (mkTSystemName name) lts pre
     getAsserts _ = Nothing  -- ord. rules & coverage statements
 
 -- | Translate Atom 'Rule's into 'SallyTransition's. One transition is
