@@ -26,7 +26,7 @@ main = do
 
 -- C Code Generator Utilities --------------------------------------------
 
--- | Invoke the atom compiler, generating 'om1.{c,h}'
+-- | Invoke the atom compiler, generating 'ex*.{c,h}'
 -- Also print out info on the generated schedule.
 compileToC :: Name -> Atom () -> IO ()
 compileToC nm atm = do
@@ -48,7 +48,7 @@ prePostCode nm assertNames _covNames _probeNames =
             , ""
             , "void assert(int id, bool c, int64_t clk) {"
             , "  if (!c) {"
-            , "    printf(\"assertion %s failed at time %lld\\n\", assert_names[id], clk);"
+            , "    printf(\"assertion %s failed at time %ld\\n\", assert_names[id], clk);"
             , "  }"
             , "}"
             , ""
