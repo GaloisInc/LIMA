@@ -270,7 +270,7 @@ writeC name config state rules (mp, schedule') assertNames coverNames probeNames
       , codeAssertionChecks mp config assertNames coverNames rules
 
         -- generate "main" (at least as far as LIMA is concerned)
-      , "void " ++ funcName ++ "()"
+      , "void " ++ funcName ++ "(void)"
       , "{"
       , unlines [ swOrHwClock
                 , codePeriodPhases
@@ -416,7 +416,7 @@ writeC name config state rules (mp, schedule') assertNames coverNames probeNames
       , ""
       , preHCode
       , ""
-      , "void " ++ funcName ++ "();"
+      , "void " ++ funcName ++ "(void);"
       , ""
       , declState False (StateHierarchy (cStateName config) [state])
       , ""
@@ -500,7 +500,7 @@ codeRule :: UeMap -> Config -> Rule -> String
 codeRule mp cfg rule@Rule{} =
     -- function decl
     "/* " ++ show rule ++ " */\n" ++
-    "static void __r" ++ show (ruleId rule) ++ "() {\n" ++
+    "static void __r" ++ show (ruleId rule) ++ "(void) {\n" ++
 
     -- declare local vars
     concatMap (codeUE mp cfg ues "  ") ues ++
@@ -617,7 +617,7 @@ globalClk = "__global_clock"
 codeAssertionChecks :: UeMap -> Config -> [Name] -> [Name] -> [Rule] -> String
 codeAssertionChecks mp config assertNames coverNames rules =
   codeIf (cAssert config) $
-  "static void __assertion_checks() {\n" ++
+  "static void __assertion_checks(void) {\n" ++
   concatMap (codeUE mp config ues "  ") ues ++
   concat [     "  if (" ++ id' enable ++ ") " ++ cAssertName config
             ++ "(" ++ assertionId name ++ ", " ++ id' check ++ ", "
